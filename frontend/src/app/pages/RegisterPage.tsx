@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Trophy, Mail, Lock, User, Eye, EyeOff, ArrowLeft, Building } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useAuth } from '../context/AuthContext';
+import { appPaths } from '../data/paths';
 
 /* ─── Keyframes (same as LoginPage) ─── */
 const STYLES = `
@@ -149,6 +151,7 @@ function TelkomBg() {
 /* ─── Register Page ─── */
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [showPassword,        setShowPassword]        = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -175,7 +178,13 @@ export function RegisterPage() {
     if (formData.password !== formData.confirmPassword) err.confirmPassword = 'Passwords do not match';
 
     if (Object.keys(err).length > 0) { setErrors(err); return; }
-    navigate('/dashboard');
+    login({
+      id: Date.now(),
+      name: formData.fullName,
+      email: formData.email,
+      role: 'user',
+    });
+    navigate(appPaths.dashboard);
   };
 
   /* shared input class helper */
@@ -243,7 +252,7 @@ export function RegisterPage() {
 
         {/* Back */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(appPaths.home)}
           className="flex items-center gap-2 mb-6 transition-colors text-white/40 hover:text-[#C8102E]"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -339,7 +348,7 @@ export function RegisterPage() {
             <p className="text-sm text-white/40">
               Sudah punya akun?{' '}
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate(appPaths.login)}
                 className="text-[#C8102E] hover:underline font-semibold"
               >
                 Login di sini

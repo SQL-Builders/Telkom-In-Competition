@@ -1,12 +1,44 @@
-@import "./tailwind.css";
+@import "tailwindcss";
 
+/* =========================
+   GLOBAL DARK MODE
+========================= */
 
-html,
-body,
-#root {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100%;
-  font-family: "Inter", sans-serif;
+html.dark body {
+  background-color: #020617;
+  color: white;
+}
+
+/* Card */
+html.dark .bg-white {
+  background-color: #111827 !important;
+}
+
+/* Text */
+html.dark .text-\[\#333333\] {
+  color: white !important;
+}
+
+html.dark .text-gray-600,
+html.dark .text-gray-700 {
+  color: #D1D5DB !important;
+}
+
+/* Border */
+html.dark .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+/* Input */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #1E293B !important;
+  color: white !important;
+  border-color: #374151 !important;
+}
+
+/* Background */
+html.dark .bg-gray-50 {
+  background-color: #020617 !important;
 }

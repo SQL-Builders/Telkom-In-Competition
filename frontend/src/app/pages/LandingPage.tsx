@@ -1,4 +1,4 @@
-import { Navbar } from '../components/Navbar';
+  import { Navbar } from '../components/Navbar';
 import { HeroCarousel } from '../components/HeroCarousel';
 import { HighlightSection } from '../components/HighlightSection';
 import { Footer } from '../components/Footer';
@@ -6,69 +6,8 @@ import { CompetitionCard } from '../components/CompetitionCard';
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router';
-
-const featuredCompetitions = [
-  {
-    id: 1,
-    title: 'International UI/UX Design Competition 2026',
-    description: 'Design innovative and user-friendly interfaces that solve real-world problems.',
-    category: 'UI/UX',
-    deadline: '2026-05-15',
-    level: 'International',
-    participants: 1247,
-    image: '/competitions/uiux.jpg',
-  },
-  {
-    id: 2,
-    title: 'National Hackathon: Smart City Solutions',
-    description: 'Build technology solutions that make cities smarter, safer, and more sustainable.',
-    category: 'IT',
-    deadline: '2026-04-28',
-    level: 'National',
-    participants: 856,
-    image: '/competitions/hackathon.jpg',
-  },
-  {
-    id: 3,
-    title: 'Business Innovation Challenge 2026',
-    description: 'Present your innovative business ideas and compete for funding.',
-    category: 'Business',
-    deadline: '2026-06-10',
-    level: 'National',
-    participants: 623,
-    image: '/competitions/business.jpg',
-  },
-  {
-    id: 4,
-    title: 'Data Science & AI Competition',
-    description: 'Analyze complex datasets and build predictive models.',
-    category: 'Data Science',
-    deadline: '2026-05-22',
-    level: 'International',
-    participants: 1089,
-    image: '/competitions/data.jpg',
-  },
-  {
-    id: 5,
-    title: 'Mobile App Development Contest',
-    description: 'Create innovative mobile applications that solve everyday problems.',
-    category: 'IT',
-    deadline: '2026-05-30',
-    level: 'National',
-    participants: 742,
-    image: '/competitions/mobile.jpg',
-  },
-  {
-    id: 6,
-    title: 'Graphic Design Championship 2026',
-    description: 'Showcase your creativity through stunning visual designs.',
-    category: 'Design',
-    deadline: '2026-06-05',
-    level: 'International',
-    participants: 1456,
-    image: '/competitions/graphic.jpg',
-  },
-];
+import { featuredCompetitions } from '../data/competitions';
+import { appPaths } from '../data/paths';
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -110,7 +49,7 @@ export function LandingPage() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/explore')}
+              onClick={() => navigate(appPaths.explore)}
               className="px-8 py-4 bg-[#C8102E] text-white font-bold text-lg rounded-xl hover:bg-[#A00D25] transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               Explore All Competitions
@@ -119,7 +58,7 @@ export function LandingPage() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/register')}
+              onClick={() => navigate(appPaths.register)}
               className="px-8 py-4 bg-white border-2 border-[#C8102E] text-[#C8102E] font-bold text-lg rounded-xl hover:bg-[#C8102E] hover:text-white transition-colors shadow-lg"
             >
               Join Now

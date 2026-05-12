@@ -2,60 +2,8 @@ import { Navbar } from '../components/Navbar';
 import { motion } from 'motion/react';
 import { Calendar, Clock, CheckCircle, AlertCircle, Eye, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router';
-
-const competitions = [
-  {
-    id: 1,
-    title: 'International UI/UX Design Competition 2026',
-    category: 'UI/UX',
-    status: 'university-approved',
-    stage: 'University',
-    deadline: '2026-05-15',
-    submittedDate: '2026-05-10',
-    reviewedDate: '2026-05-17',
-    progress: 100,
-  },
-  {
-    id: 2,
-    title: 'National Hackathon: Smart City Solutions',
-    category: 'IT',
-    status: 'university-pending',
-    stage: 'University',
-    deadline: '2026-04-28',
-    submittedDate: '2026-04-25',
-    progress: 100,
-  },
-  {
-    id: 3,
-    title: 'Business Innovation Challenge 2026',
-    category: 'Business',
-    status: 'not-started',
-    stage: 'University',
-    deadline: '2026-06-10',
-    progress: 0,
-  },
-  {
-    id: 4,
-    title: 'Data Science & AI Competition',
-    category: 'Data Science',
-    status: 'university-rejected',
-    stage: 'University',
-    deadline: '2026-05-22',
-    submittedDate: '2026-05-18',
-    reviewedDate: '2026-05-20',
-    progress: 100,
-  },
-  {
-    id: 5,
-    title: 'Mobile App Development Contest',
-    category: 'IT',
-    status: 'national-submitted',
-    stage: 'National',
-    deadline: '2026-05-30',
-    submittedDate: '2026-05-25',
-    progress: 100,
-  },
-];
+import { myCompetitions, formatDaysLeft } from '../data/competitions';
+import { appPaths } from '../data/paths';
 
 const statusConfig = {
   'not-started': {
@@ -107,24 +55,24 @@ export function MyCompetitions() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-2xl p-6 border border-gray-200">
-            <div className="text-3xl font-bold text-[#333333] mb-2">{competitions.length}</div>
+            <div className="text-3xl font-bold text-[#333333] mb-2">{myCompetitions.length}</div>
             <div className="text-gray-600">Total Competitions</div>
           </div>
           <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
             <div className="text-3xl font-bold text-yellow-700 mb-2">
-              {competitions.filter(c => c.status === 'university-pending').length}
+              {myCompetitions.filter(c => c.status === 'university-pending').length}
             </div>
             <div className="text-yellow-700">Under Review</div>
           </div>
           <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
             <div className="text-3xl font-bold text-green-700 mb-2">
-              {competitions.filter(c => c.status === 'university-approved').length}
+              {myCompetitions.filter(c => c.status === 'university-approved').length}
             </div>
             <div className="text-green-700">Approved</div>
           </div>
           <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
             <div className="text-3xl font-bold text-blue-700 mb-2">
-              {competitions.filter(c => c.status === 'national-submitted' || c.status === 'national-reviewed').length}
+              {myCompetitions.filter(c => c.status === 'national-submitted' || c.status === 'national-reviewed').length}
             </div>
             <div className="text-blue-700">National Stage</div>
           </div>
@@ -132,7 +80,7 @@ export function MyCompetitions() {
 
         {/* Competitions List */}
         <div className="space-y-4">
-          {competitions.map((competition) => {
+          {myCompetitions.map((competition) => {
             const status = statusConfig[competition.status as keyof typeof statusConfig];
             const StatusIcon = status.icon;
             const daysLeft = Math.ceil((new Date(competition.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
@@ -144,7 +92,7 @@ export function MyCompetitions() {
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.01 }}
                 className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-xl transition-all cursor-pointer"
-                onClick={() => navigate(`/competition/${competition.id}`)}
+                onClick={() => navigate(appPaths.competition(competition.id))}
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                   <div className="flex-1">
@@ -180,7 +128,7 @@ export function MyCompetitions() {
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           <span className={daysLeft <= 7 ? 'text-red-600 font-semibold' : ''}>
-                            {daysLeft} days remaining
+                            {formatDaysLeft(competition.deadline)}
                           </span>
                         </div>
                       )}
@@ -210,7 +158,7 @@ export function MyCompetitions() {
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/competition/${competition.id}/review-result`);
+                          navigate(appPaths.competitionReview(competition.id));
                         }}
                         className="px-6 py-3 bg-green-100 text-green-700 font-semibold rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2"
                       >
@@ -224,7 +172,7 @@ export function MyCompetitions() {
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/competition/${competition.id}/review-result`);
+                          navigate(appPaths.competitionReview(competition.id));
                         }}
                         className="px-6 py-3 bg-red-100 text-red-700 font-semibold rounded-xl hover:bg-red-200 transition-colors flex items-center gap-2"
                       >
@@ -238,7 +186,7 @@ export function MyCompetitions() {
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/competition/${competition.id}/university-proposal`);
+                          navigate(appPaths.competitionProposal(competition.id));
                         }}
                         className="px-6 py-3 bg-[#C8102E] text-white font-semibold rounded-xl hover:bg-[#A00D25] transition-colors flex items-center gap-2"
                       >
@@ -252,7 +200,7 @@ export function MyCompetitions() {
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/competition/${competition.id}/register`);
+                          navigate(appPaths.competitionRegistration(competition.id));
                         }}
                         className="px-6 py-3 bg-[#C8102E] text-white font-semibold rounded-xl hover:bg-[#A00D25] transition-colors flex items-center gap-2"
                       >
