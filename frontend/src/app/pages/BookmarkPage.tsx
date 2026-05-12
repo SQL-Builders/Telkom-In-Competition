@@ -2,55 +2,35 @@ import { Navbar } from '../components/Navbar';
 import { CompetitionCard } from '../components/CompetitionCard';
 import { BookMarked, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
-
-const bookmarkedCompetitions = [
-  {
-    id: 1,
-    title: 'International UI/UX Design Competition 2026',
-    description: 'Design innovative and user-friendly interfaces that solve real-world problems.',
-    category: 'UI/UX',
-    deadline: '2026-05-15',
-    level: 'International',
-    participants: 1247,
-    image: '/competitions/uiux.jpg',
-    bookmarkedDate: '2026-04-10',
-  },
-  {
-    id: 3,
-    title: 'Business Innovation Challenge 2026',
-    description: 'Present your innovative business ideas and compete for funding.',
-    category: 'Business',
-    deadline: '2026-06-10',
-    level: 'National',
-    participants: 623,
-    image: '/competitions/business.jpg',
-    bookmarkedDate: '2026-04-12',
-  },
-  {
-    id: 4,
-    title: 'Data Science & AI Competition',
-    description: 'Analyze complex datasets and build predictive models.',
-    category: 'Data Science',
-    deadline: '2026-05-22',
-    level: 'International',
-    participants: 1089,
-    image: '/competitions/data.jpg',
-    bookmarkedDate: '2026-04-08',
-  },
-  {
-    id: 6,
-    title: 'Graphic Design Championship 2026',
-    description: 'Showcase your creativity through stunning visual designs.',
-    category: 'Design',
-    deadline: '2026-06-05',
-    level: 'International',
-    participants: 1456,
-    image: '/competitions/graphic.jpg',
-    bookmarkedDate: '2026-04-11',
-  },
-];
+import { bookmarkedCompetitions } from '../data/competitions';
+import { useMemo, useState } from 'react';
 
 export function BookmarkPage() {
+  const [items, setItems] = useState(bookmarkedCompetitions);
+  const [category, setCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
+  const visibleBookmarks = useMemo(() => {
+    const filtered =
+      category === 'all'
+        ? items
+        : items.filter((competition) => competition.category === category);
+
+    return [...filtered].sort((first, second) => {
+      if (sortBy === 'deadline') {
+        return new Date(first.deadline).getTime() - new Date(second.deadline).getTime();
+      }
+
+      if (sortBy === 'name') {
+        return first.title.localeCompare(second.title);
+      }
+
+      return new Date(second.bookmarkedDate).getTime() - new Date(first.bookmarkedDate).getTime();
+    });
+  }, [category, items, sortBy]);
+  const designCount = items.filter((competition) => ['UI/UX', 'Design'].includes(competition.category)).length;
+  const techCount = items.filter((competition) => ['IT', 'Data Science'].includes(competition.category)).length;
+  const businessCount = items.filter((competition) => competition.category === 'Business').length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -63,11 +43,11 @@ export function BookmarkPage() {
             <h1 className="text-4xl font-bold text-[#333333]">Bookmarks</h1>
           </div>
           <p className="text-lg text-gray-600">
-            You have {bookmarkedCompetitions.length} saved competitions
+            You have {items.length} saved competitions
           </p>
         </div>
 
-        {bookmarkedCompetitions.length === 0 ? (
+        {items.length === 0 ? (
           <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-16 text-center">
             <BookMarked className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-gray-400 mb-2">No Bookmarks Yet</h3>
@@ -80,22 +60,32 @@ export function BookmarkPage() {
             {/* Quick Actions */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex gap-3">
-                <select className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent">
-                  <option>All Categories</option>
-                  <option>UI/UX</option>
-                  <option>IT</option>
-                  <option>Business</option>
-                  <option>Design</option>
+                <select
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="UI/UX">UI/UX</option>
+                  <option value="IT">IT</option>
+                  <option value="Business">Business</option>
+                  <option value="Design">Design</option>
+                  <option value="Data Science">Data Science</option>
                 </select>
-                <select className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent">
-                  <option>Sort by: Recent</option>
-                  <option>Sort by: Deadline</option>
-                  <option>Sort by: Name</option>
+                <select
+                  value={sortBy}
+                  onChange={(event) => setSortBy(event.target.value)}
+                  className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent"
+                >
+                  <option value="recent">Sort by: Recent</option>
+                  <option value="deadline">Sort by: Deadline</option>
+                  <option value="name">Sort by: Name</option>
                 </select>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setItems([])}
                 className="px-6 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
@@ -104,16 +94,23 @@ export function BookmarkPage() {
             </div>
 
             {/* Bookmarked Competitions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bookmarkedCompetitions.map((competition) => (
-                <div key={competition.id} className="relative">
-                  <CompetitionCard {...competition} />
-                  <div className="absolute top-4 left-4 px-3 py-1 bg-[#C8102E] text-white text-xs font-semibold rounded-lg">
-                    Saved {new Date(competition.bookmarkedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            {visibleBookmarks.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleBookmarks.map((competition) => (
+                  <div key={competition.id} className="relative">
+                    <CompetitionCard {...competition} />
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-[#C8102E] text-white text-xs font-semibold rounded-lg">
+                      Saved {new Date(competition.bookmarkedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+                <h3 className="text-2xl font-bold text-[#333333] mb-2">No bookmarks match this filter</h3>
+                <p className="text-gray-600">Change the category filter to see more saved competitions.</p>
+              </div>
+            )}
 
             {/* Collections Section */}
             <div className="mt-16">
@@ -125,7 +122,7 @@ export function BookmarkPage() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">Design Competitions</h3>
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-sm">2</span>
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-sm">{designCount}</span>
                   </div>
                   <p className="text-white/90 text-sm">UI/UX and Graphic Design competitions</p>
                 </motion.div>
@@ -136,7 +133,7 @@ export function BookmarkPage() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">Tech Challenges</h3>
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-sm">1</span>
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-sm">{techCount}</span>
                   </div>
                   <p className="text-white/90 text-sm">IT and Data Science competitions</p>
                 </motion.div>
@@ -147,7 +144,7 @@ export function BookmarkPage() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">Business & Strategy</h3>
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-sm">1</span>
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-sm">{businessCount}</span>
                   </div>
                   <p className="text-white/90 text-sm">Business and innovation challenges</p>
                 </motion.div>

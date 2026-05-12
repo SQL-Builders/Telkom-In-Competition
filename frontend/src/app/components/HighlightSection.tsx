@@ -1,15 +1,5 @@
 import { motion } from 'motion/react';
-
-const highlights = [
-  { id: 1, title: 'UI/UX Design Summit', color: 'from-purple-500 to-pink-500' },
-  { id: 2, title: 'Hackathon 2026', color: 'from-blue-500 to-cyan-500' },
-  { id: 3, title: 'Business Innovation', color: 'from-orange-500 to-red-500' },
-  { id: 4, title: 'Data Science Challenge', color: 'from-green-500 to-emerald-500' },
-  { id: 5, title: 'Mobile App Contest', color: 'from-indigo-500 to-purple-500' },
-  { id: 6, title: 'Web Development', color: 'from-yellow-500 to-orange-500' },
-  { id: 7, title: 'AI Innovation', color: 'from-pink-500 to-rose-500' },
-  { id: 8, title: 'Cybersecurity CTF', color: 'from-red-600 to-pink-600' },
-];
+import { competitionHighlights } from '../data/competitions';
 
 export function HighlightSection() {
   return (
@@ -25,7 +15,7 @@ export function HighlightSection() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {highlights.map((highlight, index) => (
+          {competitionHighlights.map((highlight, index) => (
             <motion.div
               key={highlight.id}
               initial={{ opacity: 0, scale: 0.9 }}

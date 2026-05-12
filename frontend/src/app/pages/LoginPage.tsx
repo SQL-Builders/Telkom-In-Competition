@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Mail, Lock, Eye, EyeOff, ArrowLeft, Star, Zap, Award } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../context/AuthContext';
+import { appPaths } from '../data/paths';
 
 
 /* ─── Keyframes injected once ─── */
@@ -224,8 +225,14 @@ export function LoginPage() {
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
-    login(formData.email, formData.password);
-    const from = (location.state as any)?.from?.pathname || '/dashboard';
+    // Simulate login (in real app, call API here)
+    login({
+      id: Date.now(),
+      name: formData.email.split('@')[0],
+      email: formData.email,
+      role: 'user',
+    });
+    const from = (location.state as any)?.from?.pathname || appPaths.dashboard;
     navigate(from, { replace: true });
   };
 
@@ -248,7 +255,7 @@ export function LoginPage() {
 
         {/* Back button */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(appPaths.home)}
           className="flex items-center gap-2 mb-8 transition-colors text-white/40 hover:text-[#C8102E]"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -388,7 +395,7 @@ export function LoginPage() {
             <p className="text-sm text-white/40">
               Belum punya akun?{' '}
               <button
-                onClick={() => navigate('/register')}
+                onClick={() => navigate(appPaths.register)}
                 className="text-[#C8102E] hover:underline font-semibold"
               >
                 Daftar di sini
@@ -397,7 +404,7 @@ export function LoginPage() {
             <p className="text-xs text-white/30">
               Login sebagai admin?{' '}
               <button
-                onClick={() => navigate('/admin-login')}
+                onClick={() => navigate(appPaths.adminLogin)}
                 className="text-[#C8102E] hover:underline font-semibold"
               >
                 Admin Portal

@@ -1,5 +1,6 @@
 import { Trophy, Mail, MapPin, Phone, Instagram, Twitter, Linkedin, Youtube, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { appPaths } from '../data/paths';
 
 export function Footer() {
   const navigate = useNavigate();
@@ -29,13 +30,13 @@ export function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-3">
-              <li><a href="/" className="text-gray-400 hover:text-[#C8102E] transition-colors">Home</a></li>
-              <li><a href="/explore" className="text-gray-400 hover:text-[#C8102E] transition-colors">Explore Competitions</a></li>
-              <li><a href="/my-competitions" className="text-gray-400 hover:text-[#C8102E] transition-colors">My Competitions</a></li>
-              <li><a href="/bookmarks" className="text-gray-400 hover:text-[#C8102E] transition-colors">Bookmarks</a></li>
+              <li><a href={appPaths.home} className="text-gray-400 hover:text-[#C8102E] transition-colors">Home</a></li>
+              <li><a href={appPaths.explore} className="text-gray-400 hover:text-[#C8102E] transition-colors">Explore Competitions</a></li>
+              <li><a href={appPaths.myCompetitions} className="text-gray-400 hover:text-[#C8102E] transition-colors">My Competitions</a></li>
+              <li><a href={appPaths.bookmarks} className="text-gray-400 hover:text-[#C8102E] transition-colors">Bookmarks</a></li>
               <li>
                 <button 
-                  onClick={() => navigate('/admin-login')} 
+                  onClick={() => navigate(appPaths.adminLogin)}
                   className="text-gray-400 hover:text-[#C8102E] transition-colors flex items-center gap-2"
                 >
                   <Shield className="w-4 h-4" />
