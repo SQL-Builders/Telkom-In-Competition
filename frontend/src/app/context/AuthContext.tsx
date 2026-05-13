@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { appConfig } from "../config/appConfig";
+import { ROLES } from "../constants/roles";
 
 interface User {
   id: number;
@@ -20,7 +22,8 @@ interface AuthContextType {
 // dan reusable.
 //
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const AUTH_STORAGE_KEY = "telkom-in-competition:user";
+const AUTH_STORAGE_KEY =
+  appConfig.authStorageKey;
 
 export function AuthProvider({ children }: { children: ReactNode }) { // Teknik State Management diterapkan menggunakan React's useState
   const [user, setUser] = useState<User | null>(() => {
@@ -37,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) { // Teknik 
   }); // State untuk menyimpan informasi user yang sedang login
 
   const isLoggedIn = user !== null;
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === ROLES.ADMIN;
 
   // Teknik Authentication diterapkan dengan menyediakan fungsi login dan logout
   const login = (userData: User) => {

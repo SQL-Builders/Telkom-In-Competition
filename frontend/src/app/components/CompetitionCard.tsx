@@ -140,7 +140,7 @@ export function CompetitionCard({
 
           </span>
 
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
+          <span className="px-3 py-1 bg-[#374151] text-[#F3F4F6] rounded-lg text-sm font-medium">
 
             {level}
 
