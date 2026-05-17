@@ -34,6 +34,8 @@ const buttonVariants = cva(
   },
 );
 
+// Generics: ComponentProps<"button"> mengambil props bawaan button HTML, lalu
+// VariantProps<typeof buttonVariants> mengambil tipe variant dan size dari cva.
 function Button({
   className,
   variant,

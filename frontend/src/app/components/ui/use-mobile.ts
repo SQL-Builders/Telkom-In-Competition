@@ -3,6 +3,8 @@ import * as React from "react";
 const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
+  // Generics: useState<boolean | undefined> membedakan kondisi awal belum dicek
+  // dari hasil pengecekan viewport yang bernilai true/false.
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(
     undefined,
   );

@@ -42,6 +42,8 @@ type SidebarContextProps = {
   toggleSidebar: () => void;
 };
 
+// Generics: createContext<SidebarContextProps | null> membuat semua consumer
+// sidebar mendapat tipe context yang lengkap atau null sebelum provider aktif.
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
 function useSidebar() {
@@ -53,6 +55,8 @@ function useSidebar() {
   return context;
 }
 
+// Generics: ComponentProps<"div"> mengambil props HTML div untuk wrapper sidebar,
+// lalu digabung dengan props custom seperti defaultOpen dan onOpenChange.
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -113,6 +117,8 @@ function SidebarProvider({
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? "expanded" : "collapsed";
 
+  // Generics: useMemo<SidebarContextProps> memastikan object yang disimpan
+  // ke provider selalu memenuhi kontrak SidebarContextProps.
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
       state,

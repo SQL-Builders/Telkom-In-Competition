@@ -15,10 +15,14 @@ export function AdminLoginPage() {
     email: '',
     password: '',
   });
+  // Generics: object type pada useState menjaga error admin login hanya untuk
+  // field email/password, dengan pesan error bertipe string.
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
+  // Generics: FormEvent memberi tipe event submit form admin.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Generics: object type ini menyamakan bentuk hasil validasi dengan state errors.
     const newErrors: { email?: string; password?: string } = {};
 
     if (!formData.email) {

@@ -10,7 +10,10 @@ export function UniversityProposal() {
   const navigate = useNavigate();
   const { id } = useParams();
   const competition = getCompetitionById(id);
+  // Generics: Array<{ ... }> membuat daftar file proposal selalu punya name,
+  // size, dan type untuk ditampilkan serta diformat ukurannya.
   const [files, setFiles] = useState<Array<{ name: string; size: number; type: string }>>([]);
+  // Generics: union literal membatasi status proposal hanya pada state yang valid.
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState({
     teamName: '',
@@ -24,6 +27,7 @@ export function UniversityProposal() {
     proposedSolution: '',
   });
 
+  // Generics: ChangeEvent<HTMLInputElement> memastikan target event adalah input file.
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map(file => ({
@@ -39,6 +43,7 @@ export function UniversityProposal() {
     setFiles(files.filter((_, i) => i !== index));
   };
 
+  // Generics: FormEvent memberi tipe event submit form agar fungsi submit type-safe.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('uploading');

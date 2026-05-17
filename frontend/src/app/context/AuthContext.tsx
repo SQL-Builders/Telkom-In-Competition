@@ -15,14 +15,14 @@ interface AuthContextType {
   logout: () => void;
 }
 
-// Teknik Generics diterapkan menggunakan TypeScript
-// untuk membuat authentication state menjadi type-safe
-// dan reusable.
-//
+// Generics: createContext diberi tipe AuthContextType | undefined agar isi context
+// selalu sesuai kontrak auth, tetapi tetap bisa kosong sebelum AuthProvider aktif.
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = "telkom-in-competition:user";
 
 export function AuthProvider({ children }: { children: ReactNode }) { // Teknik State Management diterapkan menggunakan React's useState
+  // Generics: useState<User | null> membatasi state agar hanya berisi data User
+  // saat login atau null saat belum ada sesi pengguna.
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
 

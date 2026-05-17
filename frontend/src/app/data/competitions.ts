@@ -29,6 +29,8 @@ export interface Competition {
   recommended: boolean;
   heroGradient: string;
   highlightColor: string;
+  // Generics: Array<{ ... }> memastikan setiap item timeline punya date, event,
+  // dan stage dengan tipe yang sama di seluruh data kompetisi.
   timeline: Array<{
     date: string;
     event: string;
@@ -58,6 +60,8 @@ export interface ReviewResultData {
     strengths: string[];
     improvements: string[];
   };
+  // Generics: Array<{ ... }> menjaga setiap skor review tetap memiliki criteria,
+  // score, dan maxScore sehingga mudah dipakai di halaman hasil review.
   scores: Array<{
     criteria: string;
     score: number;
@@ -576,6 +580,8 @@ export const participants = [
 ];
 
 export const bookmarkedCompetitionIds = [1, 3, 4, 6];
+// Generics: Record<number, string> memetakan id kompetisi ke tanggal bookmark
+// sehingga key harus berupa angka dan value harus berupa string tanggal.
 const bookmarkedDates: Record<number, string> = {
   1: '2026-04-10',
   3: '2026-04-12',
@@ -605,6 +611,8 @@ export const myCompetitions = userCompetitions
       ...entry,
     };
   })
+  // Generics: Array<Competition & UserCompetition> menandai hasil merge sebagai
+  // gabungan detail kompetisi dan status kompetisi milik user.
   .filter(Boolean) as Array<Competition & UserCompetition>;
 export const bookmarkedCompetitions = bookmarkedCompetitionIds
   .map((id) => {
@@ -617,6 +625,8 @@ export const bookmarkedCompetitions = bookmarkedCompetitionIds
       bookmarkedDate: bookmarkedDates[id],
     };
   })
+  // Generics: Array<Competition & { bookmarkedDate: string }> memastikan data
+  // bookmark tetap membawa semua field Competition plus tanggal bookmark.
   .filter(Boolean) as Array<Competition & { bookmarkedDate: string }>;
 export const adminCompetitionRows = competitions.map((competition) => ({
   id: competition.id,

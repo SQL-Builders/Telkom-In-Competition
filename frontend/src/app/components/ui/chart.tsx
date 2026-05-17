@@ -8,6 +8,9 @@ import { cn } from "./utils";
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
 
+// Generics: mapped type [k in string] membuat config chart bisa memakai key
+// dinamis, sementara Record<keyof typeof THEMES, string> memaksa warna tersedia
+// untuk setiap theme yang didefinisikan di THEMES.
 export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode;
@@ -22,6 +25,8 @@ type ChartContextProps = {
   config: ChartConfig;
 };
 
+// Generics: createContext<ChartContextProps | null> memastikan context chart
+// membawa config yang valid atau null saat belum berada di ChartContainer.
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
 function useChart() {
@@ -34,6 +39,8 @@ function useChart() {
   return context;
 }
 
+// Generics: ComponentProps<"div"> mengambil props HTML div, lalu digabung dengan
+// config chart dan children milik ResponsiveContainer dari Recharts.
 function ChartContainer({
   id,
   className,

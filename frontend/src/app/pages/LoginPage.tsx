@@ -207,10 +207,15 @@ export function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData]         = useState({ email: '', password: '' });
+  // Generics: object type pada useState membatasi key error hanya email/password
+  // dan setiap pesan error harus berupa string.
   const [errors, setErrors]             = useState<{ email?: string; password?: string }>({});
 
+  // Generics: FormEvent memberi tipe event submit form login.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Generics: object type yang sama dipakai agar hasil validasi konsisten
+    // dengan state errors di atas.
     const newErrors: { email?: string; password?: string } = {};
 
     if (!formData.email)

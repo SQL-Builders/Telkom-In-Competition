@@ -1,0 +1,96 @@
+# Dokumentasi Teknis Generics Frontend
+
+Dokumentasi ini khusus mencatat penggunaan teknik generics TypeScript/React pada folder `frontend/src`.
+JSX tag seperti `<Navbar />` tidak dihitung sebagai generics. Yang dicatat adalah generic type seperti `useState<T>`, `React.ComponentProps<T>`, `Record<K, V>`, dan pola sejenis.
+
+## Ringkasan Teknik
+
+| Teknik | Fungsi |
+| --- | --- |
+| `useState<T>` | Menentukan tipe data state React agar nilai yang disimpan konsisten. |
+| `createContext<T>` | Menentukan bentuk data React context agar provider dan consumer memakai kontrak yang sama. |
+| `React.ComponentProps<T>` | Mengambil tipe props dari elemen HTML atau komponen library sehingga wrapper tetap menerima props asli. |
+| `VariantProps<typeof variants>` | Mengambil tipe `variant` dan `size` dari konfigurasi `class-variance-authority`. |
+| `Array<T>` | Menentukan tipe item di dalam array. |
+| `Record<K, V>` | Menentukan tipe key dan value pada object map. |
+| `React.FormEvent`, `React.ChangeEvent`, `React.KeyboardEvent` | Menentukan tipe event React sesuai elemen asal event. |
+| `FieldPath<T>`, `ControllerProps<TFieldValues, TName>` | Menjaga field form dari `react-hook-form` tetap sesuai struktur data form. |
+| `Pick<T, K>` | Mengambil sebagian property dari tipe lain untuk dipakai ulang. |
+| `ImgHTMLAttributes<T>` | Mengambil seluruh props standar elemen gambar HTML. |
+
+## File Fitur dan Data
+
+| File | Teknik generics | Fungsi teknis |
+| --- | --- | --- |
+| `src/app/context/AuthContext.tsx` | `createContext<AuthContextType \| undefined>`, `useState<User \| null>` | Membuat auth context type-safe dan menjaga state user hanya berisi data `User` atau `null`. |
+| `src/app/data/competitions.ts` | `Array<{ ... }>`, `Record<number, string>`, `Array<Competition & UserCompetition>`, `Array<Competition & { bookmarkedDate: string }>` | Menjaga struktur data kompetisi, timeline, skor review, bookmark, dan data gabungan kompetisi-user tetap konsisten. |
+| `src/app/pages/AdminLoginPage.tsx` | `useState<{ email?: string; password?: string }>`, `React.FormEvent` | Membatasi object error hanya untuk field login admin dan memberi tipe pada event submit form. |
+| `src/app/pages/LoginPage.tsx` | `useState<{ email?: string; password?: string }>`, `React.FormEvent` | Membatasi object error login user dan membuat handler submit form type-safe. |
+| `src/app/pages/RegisterPage.tsx` | `useState<Record<string, string>>`, `Record<string, string>`, `React.FormEvent` | Menyimpan error validasi register dengan key dinamis, tetapi value tetap string. |
+| `src/app/pages/CompetitionRegistration.tsx` | `useState<Array<{ name: string; size: number; type: string }>>`, `useState<'idle' \| 'uploading' \| 'success' \| 'error'>`, `React.ChangeEvent<HTMLInputElement>`, `React.FormEvent` | Menjaga tipe file upload, status submit, event input file, dan event submit registrasi. |
+| `src/app/pages/UniversityProposal.tsx` | `useState<Array<{ name: string; size: number; type: string }>>`, `useState<'idle' \| 'uploading' \| 'success' \| 'error'>`, `React.ChangeEvent<HTMLInputElement>`, `React.FormEvent` | Menjaga tipe file proposal, status submit, event input file, dan event submit proposal. |
+
+## File Komponen Figma
+
+| File | Teknik generics | Fungsi teknis |
+| --- | --- | --- |
+| `src/app/components/figma/ImageWithFallback.tsx` | `React.ImgHTMLAttributes<HTMLImageElement>` | Membuat komponen fallback image menerima props standar `<img>` seperti `src`, `alt`, `style`, dan `className`. |
+
+## File UI Reusable
+
+| File | Teknik generics | Fungsi teknis |
+| --- | --- | --- |
+| `src/app/components/ui/accordion.tsx` | `React.ComponentProps<typeof AccordionPrimitive.*>` | Wrapper accordion tetap menerima props asli dari Radix Accordion. |
+| `src/app/components/ui/alert.tsx` | `React.ComponentProps<"div">`, `VariantProps<typeof alertVariants>` | Alert menerima props `div` standar dan tipe variant dari konfigurasi style. |
+| `src/app/components/ui/alert-dialog.tsx` | `React.ComponentProps<typeof AlertDialogPrimitive.*>`, `React.ComponentProps<"div">` | Wrapper alert dialog tetap sinkron dengan props bawaan Radix dan elemen layout. |
+| `src/app/components/ui/aspect-ratio.tsx` | `React.ComponentProps<typeof AspectRatioPrimitive.Root>` | Aspect ratio menerima props asli dari primitive Radix. |
+| `src/app/components/ui/avatar.tsx` | `React.ComponentProps<typeof AvatarPrimitive.*>` | Komponen avatar menerima props asli root, image, dan fallback Radix. |
+| `src/app/components/ui/badge.tsx` | `React.ComponentProps<"span">`, `VariantProps<typeof badgeVariants>` | Badge menerima props `span` standar dan tipe variant dari `badgeVariants`. |
+| `src/app/components/ui/breadcrumb.tsx` | `React.ComponentProps<"nav">`, `React.ComponentProps<"ol">`, `React.ComponentProps<"li">`, `React.ComponentProps<"a">`, `React.ComponentProps<"span">` | Setiap bagian breadcrumb tetap memiliki props HTML sesuai elemen yang dibungkus. |
+| `src/app/components/ui/button.tsx` | `React.ComponentProps<"button">`, `VariantProps<typeof buttonVariants>` | Button menerima props button standar dan variant/size dari konfigurasi style. |
+| `src/app/components/ui/calendar.tsx` | `React.ComponentProps<typeof DayPicker>` | Calendar mengikuti seluruh props yang disediakan library `react-day-picker`. |
+| `src/app/components/ui/card.tsx` | `React.ComponentProps<"div">` | Komponen card dan subkomponennya menerima props `div` standar. |
+| `src/app/components/ui/carousel.tsx` | `React.createContext<CarouselContextProps \| null>`, `React.ComponentProps<"div">`, `React.KeyboardEvent<HTMLDivElement>`, `React.ComponentProps<typeof Button>` | Context carousel, container, keyboard handler, dan tombol carousel tetap type-safe. |
+| `src/app/components/ui/chart.tsx` | mapped type `[k in string]`, `Record<keyof typeof THEMES, string>`, `React.createContext<ChartContextProps \| null>`, `React.ComponentProps<...>`, `Pick<...>` | Config chart bisa memakai key dinamis, theme color wajib sesuai daftar theme, dan wrapper Recharts tetap menerima props yang benar. |
+| `src/app/components/ui/checkbox.tsx` | `React.ComponentProps<typeof CheckboxPrimitive.Root>` | Checkbox menerima props asli dari Radix Checkbox. |
+| `src/app/components/ui/collapsible.tsx` | `React.ComponentProps<typeof CollapsiblePrimitive.*>` | Root, trigger, dan content collapsible tetap memakai props bawaan Radix. |
+| `src/app/components/ui/command.tsx` | `React.ComponentProps<typeof CommandPrimitive.*>`, `React.ComponentProps<typeof Dialog>`, `React.ComponentProps<"span">` | Command menu dan dialog command tetap mengikuti props library yang dibungkus. |
+| `src/app/components/ui/context-menu.tsx` | `React.ComponentProps<typeof ContextMenuPrimitive.*>`, `React.ComponentProps<"span">` | Semua bagian context menu memakai props bawaan Radix sesuai primitive masing-masing. |
+| `src/app/components/ui/dialog.tsx` | `React.ComponentProps<typeof DialogPrimitive.*>`, `React.ComponentProps<"div">` | Dialog, portal, overlay, content, title, description, header, dan footer tetap type-safe. |
+| `src/app/components/ui/drawer.tsx` | `React.ComponentProps<typeof DrawerPrimitive.*>`, `React.ComponentProps<"div">` | Drawer dan subkomponennya tetap mengikuti props Vaul/Radix yang dibungkus. |
+| `src/app/components/ui/dropdown-menu.tsx` | `React.ComponentProps<typeof DropdownMenuPrimitive.*>`, `React.ComponentProps<"span">` | Dropdown menu menerima props asli untuk root, trigger, item, label, separator, sub menu, dan item status. |
+| `src/app/components/ui/form.tsx` | `TFieldValues extends FieldValues`, `TName extends FieldPath<TFieldValues>`, `ControllerProps<TFieldValues, TName>`, `React.createContext<FormFieldContextValue>`, `React.ComponentProps<...>` | Field form reusable, tetapi nama field tetap valid sesuai struktur data `react-hook-form`. |
+| `src/app/components/ui/hover-card.tsx` | `React.ComponentProps<typeof HoverCardPrimitive.*>` | Hover card mengikuti props root, trigger, dan content Radix. |
+| `src/app/components/ui/input.tsx` | `React.ComponentProps<"input">` | Input menerima seluruh props standar elemen input HTML. |
+| `src/app/components/ui/input-otp.tsx` | `React.ComponentProps<typeof OTPInput>`, `React.ComponentProps<"div">` | OTP input menerima props dari library OTP dan wrapper group/slot menerima props `div`. |
+| `src/app/components/ui/label.tsx` | `React.ComponentProps<typeof LabelPrimitive.Root>` | Label mengikuti props asli dari Radix Label. |
+| `src/app/components/ui/menubar.tsx` | `React.ComponentProps<typeof MenubarPrimitive.*>`, `React.ComponentProps<"span">` | Menubar dan item turunannya tetap memakai props Radix sesuai primitive. |
+| `src/app/components/ui/navigation-menu.tsx` | `React.ComponentProps<typeof NavigationMenuPrimitive.*>` | Navigation menu mengikuti props root, list, item, trigger, content, viewport, link, dan indicator. |
+| `src/app/components/ui/pagination.tsx` | `React.ComponentProps<"nav">`, `React.ComponentProps<"ul">`, `React.ComponentProps<"li">`, `React.ComponentProps<"a">`, `Pick<React.ComponentProps<typeof Button>, "size">` | Pagination menerima props HTML yang tepat dan mengambil tipe `size` dari Button agar konsisten. |
+| `src/app/components/ui/popover.tsx` | `React.ComponentProps<typeof PopoverPrimitive.*>` | Popover mengikuti props root, trigger, content, dan anchor Radix. |
+| `src/app/components/ui/progress.tsx` | `React.ComponentProps<typeof ProgressPrimitive.Root>` | Progress menerima props asli dari Radix Progress. |
+| `src/app/components/ui/radio-group.tsx` | `React.ComponentProps<typeof RadioGroupPrimitive.*>` | Radio group dan item mengikuti props Radix Radio Group. |
+| `src/app/components/ui/resizable.tsx` | `React.ComponentProps<typeof ResizablePrimitive.*>` | Panel group, panel, dan resize handle mengikuti props library resizable panels. |
+| `src/app/components/ui/scroll-area.tsx` | `React.ComponentProps<typeof ScrollAreaPrimitive.*>` | Scroll area dan scrollbar mengikuti props bawaan Radix Scroll Area. |
+| `src/app/components/ui/select.tsx` | `React.ComponentProps<typeof SelectPrimitive.*>` | Select dan semua bagian dropdownnya mengikuti props Radix Select. |
+| `src/app/components/ui/separator.tsx` | `React.ComponentProps<typeof SeparatorPrimitive.Root>` | Separator menerima props asli dari Radix Separator. |
+| `src/app/components/ui/sheet.tsx` | `React.ComponentProps<typeof SheetPrimitive.*>`, `React.ComponentProps<"div">` | Sheet, portal, overlay, content, title, description, header, dan footer tetap type-safe. |
+| `src/app/components/ui/sidebar.tsx` | `React.createContext<SidebarContextProps \| null>`, `React.ComponentProps<...>`, `React.useMemo<SidebarContextProps>`, `VariantProps<typeof sidebarMenuButtonVariants>` | Context sidebar, provider, layout, menu button, tooltip, dan subkomponen sidebar memakai tipe props yang konsisten. |
+| `src/app/components/ui/skeleton.tsx` | `React.ComponentProps<"div">` | Skeleton menerima props standar elemen `div`. |
+| `src/app/components/ui/slider.tsx` | `React.ComponentProps<typeof SliderPrimitive.Root>` | Slider menerima props asli dari Radix Slider. |
+| `src/app/components/ui/switch.tsx` | `React.ComponentProps<typeof SwitchPrimitive.Root>` | Switch menerima props asli dari Radix Switch. |
+| `src/app/components/ui/table.tsx` | `React.ComponentProps<"table">`, `React.ComponentProps<"thead">`, `React.ComponentProps<"tbody">`, `React.ComponentProps<"tfoot">`, `React.ComponentProps<"tr">`, `React.ComponentProps<"th">`, `React.ComponentProps<"td">`, `React.ComponentProps<"caption">` | Setiap bagian table menerima props HTML sesuai elemen table yang dibungkus. |
+| `src/app/components/ui/tabs.tsx` | `React.ComponentProps<typeof TabsPrimitive.*>` | Tabs root, list, trigger, dan content mengikuti props Radix Tabs. |
+| `src/app/components/ui/textarea.tsx` | `React.ComponentProps<"textarea">` | Textarea menerima semua props standar elemen textarea HTML. |
+| `src/app/components/ui/toggle.tsx` | `React.ComponentProps<typeof TogglePrimitive.Root>`, `VariantProps<typeof toggleVariants>` | Toggle menerima props asli Radix Toggle dan tipe variant/size dari `toggleVariants`. |
+| `src/app/components/ui/toggle-group.tsx` | `React.createContext<VariantProps<typeof toggleVariants>>`, `React.ComponentProps<typeof ToggleGroupPrimitive.*>`, `VariantProps<typeof toggleVariants>` | Toggle group menyebarkan variant/size lewat context dan item tetap mengikuti props Radix. |
+| `src/app/components/ui/tooltip.tsx` | `React.ComponentProps<typeof TooltipPrimitive.*>` | Tooltip provider, root, trigger, dan content mengikuti props Radix Tooltip. |
+| `src/app/components/ui/use-mobile.ts` | `React.useState<boolean \| undefined>` | State mobile bisa membedakan kondisi awal belum dicek dari hasil boolean viewport. |
+
+## Kesimpulan
+
+Teknik generics di frontend paling banyak digunakan untuk tiga kebutuhan:
+
+1. Membuat state, context, dan data aplikasi lebih type-safe.
+2. Membuat komponen wrapper tetap kompatibel dengan props asli elemen HTML atau library UI.
+3. Mengurangi duplikasi tipe dengan mengambil tipe dari sumber utama seperti `buttonVariants`, primitive Radix, Recharts, dan `react-hook-form`.

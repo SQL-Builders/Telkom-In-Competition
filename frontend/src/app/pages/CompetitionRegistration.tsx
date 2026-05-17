@@ -10,7 +10,10 @@ export function CompetitionRegistration() {
   const navigate = useNavigate();
   const { id } = useParams();
   const competition = getCompetitionById(id);
+  // Generics: Array<{ ... }> membuat daftar file upload selalu memiliki name,
+  // size, dan type sehingga tampilan file bisa membaca property dengan aman.
   const [files, setFiles] = useState<Array<{ name: string; size: number; type: string }>>([]);
+  // Generics: union literal membatasi status submit hanya pada empat nilai valid.
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState({
     teamName: '',
@@ -22,6 +25,7 @@ export function CompetitionRegistration() {
     projectDescription: '',
   });
 
+  // Generics: ChangeEvent<HTMLInputElement> memastikan event berasal dari input file.
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map(file => ({
@@ -37,6 +41,7 @@ export function CompetitionRegistration() {
     setFiles(files.filter((_, i) => i !== index));
   };
 
+  // Generics: FormEvent memberi tipe event submit form agar preventDefault tersedia.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('uploading');

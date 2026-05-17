@@ -25,6 +25,8 @@ const badgeVariants = cva(
   },
 );
 
+// Generics: ComponentProps<"span"> membuat Badge tetap menerima props span,
+// sedangkan VariantProps mengambil pilihan variant dari badgeVariants.
 function Badge({
   className,
   variant,

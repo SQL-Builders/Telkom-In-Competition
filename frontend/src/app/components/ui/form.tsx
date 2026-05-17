@@ -18,6 +18,8 @@ import { Label } from "./label";
 
 const Form = FormProvider;
 
+// Generics: TFieldValues mewakili bentuk data form, sedangkan TName dibatasi
+// agar hanya bisa memakai nama field yang benar dari data form tersebut.
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -25,10 +27,14 @@ type FormFieldContextValue<
   name: TName;
 };
 
+// Generics: createContext<FormFieldContextValue> menjaga context field form
+// selalu membawa nama field dengan tipe yang sesuai react-hook-form.
 const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue,
 );
 
+// Generics: komponen FormField meneruskan TFieldValues dan TName ke
+// ControllerProps agar input form tetap type-safe dan reusable.
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -73,6 +79,8 @@ const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue,
 );
 
+// Generics: ComponentProps<"div"> mengambil semua props bawaan elemen div
+// sehingga wrapper FormItem tetap menerima prop HTML standar.
 function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   const id = React.useId();
 

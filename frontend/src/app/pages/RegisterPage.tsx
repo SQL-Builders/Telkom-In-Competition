@@ -158,6 +158,8 @@ export function RegisterPage() {
   const [formData, setFormData] = useState({
     fullName: '', email: '', university: '', password: '', confirmPassword: '',
   });
+  // Generics: Record<string, string> membuat object error fleksibel untuk semua
+  // field register, tetapi setiap key dan value tetap harus string.
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const set = (key: string, val: string) => {
@@ -165,8 +167,11 @@ export function RegisterPage() {
     setErrors(p => ({ ...p, [key]: undefined as any }));
   };
 
+  // Generics: FormEvent memberi tipe event submit form register.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Generics: Record<string, string> dipakai untuk menampung pesan validasi
+    // dari field register yang jumlahnya lebih banyak daripada login.
     const err: Record<string, string> = {};
 
     if (!formData.fullName) err.fullName = 'Full name is required';
