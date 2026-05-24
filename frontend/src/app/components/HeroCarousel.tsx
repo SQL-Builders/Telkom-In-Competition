@@ -86,6 +86,12 @@ export function HeroCarousel() {
         {featuredCompetitions.map((competition) => (
           <div key={competition.id}>
             <div className={`relative h-[500px] bg-gradient-to-r ${competition.gradient} overflow-hidden`}>
+              {/* Premium abstract high-tech background pattern */}
+              <img
+                src="/assets/banner_bg.png"
+                alt="Banner Tech Pattern"
+                className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30 pointer-events-none select-none"
+              />
               <div className="absolute inset-0 bg-black/10" />
 
               <div className="relative h-full max-w-7xl mx-auto px-6 lg:px-12 flex items-center">

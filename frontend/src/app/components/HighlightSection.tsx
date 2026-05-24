@@ -28,16 +28,26 @@ export function HighlightSection() {
               whileHover={{ scale: 1.05 }}
               className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${highlight.color} opacity-90 group-hover:opacity-100 transition-opacity`} />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+              {/* Premium abstract high-tech background cover */}
+              <img
+                src={highlight.image}
+                alt={highlight.title}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 pointer-events-none select-none"
+              />
 
-              <div className="relative h-full flex items-end p-6">
+              {/* Tinted gradient overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${highlight.color} opacity-75 group-hover:opacity-85 transition-opacity duration-300`} />
+              
+              {/* Shading overlay */}
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-300" />
+
+              <div className="relative h-full flex items-end p-6 z-10">
                 <h3 className="text-white font-bold text-lg leading-tight">
                   {highlight.title}
                 </h3>
               </div>
 
-              <div className="absolute inset-0 border-2 border-white/20 rounded-2xl group-hover:border-white/40 transition-colors" />
+              <div className="absolute inset-0 border-2 border-white/20 rounded-2xl group-hover:border-white/40 transition-colors z-10" />
             </motion.div>
           ))}
         </div>
