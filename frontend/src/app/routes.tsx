@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, useParams } from "react-router";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ExplorePage } from "./pages/ExplorePage";
 import { AdminLoginPage } from "./pages/AdminLoginPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
   {
     path: appPaths.register,
     Component: RegisterPage,
+  },
+  {
+    path: appPaths.forgotPassword,
+    Component: ForgotPasswordPage,
   },
   {
     path: appPaths.explore,

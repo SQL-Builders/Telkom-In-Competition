@@ -1,122 +1,29 @@
-# Telkom-In-Competition 🏆
+# 🏆 Telkom-In-Competition
 
-**Telkom-In-Competition** adalah sebuah platform digital berbasis kampus yang dirancang khusus untuk mengelola, melacak, serta mempermudah keikutsertaan mahasiswa dalam berbagai ajang kompetisi (nasional maupun internasional). Platform ini mengintegrasikan alur seleksi tingkat universitas hingga pendaftaran ke tahap nasional secara transparan dan terstruktur.
+[![React](https://img.shields.io/badge/React-18.3-blue?style=for-the-badge&logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.3-purple?style=for-the-badge&logo=vite)](https://vite.dev/)
+[![TailwindCSS v4](https://img.shields.io/badge/TailwindCSS_v4-Red?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-emerald?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![Zod](https://img.shields.io/badge/Zod-Validation-blueviolet?style=for-the-badge&logo=zod)](https://zod.dev/)
 
----
-
-## 📁 Struktur Repositori
-
-Platform ini dibangun dengan memisahkan sisi Client (Frontend) dan API Server (Backend) ke dalam dua direktori utama:
-
-```bash
-Telkom-In-Competition/
-├── frontend/    # Aplikasi Client (React, Vite, Tailwind CSS v4, TypeScript)
-└── backend/     # REST API Backend Server (Node.js, Express, Supabase Client, Zod)
-```
+**Telkom-In-Competition** adalah platform digital berbasis kampus yang dirancang khusus untuk menyederhanakan, mengelola, serta melacak keikutsertaan mahasiswa dalam berbagai ajang kompetisi ilmiah dan inovasi (nasional maupun internasional). Platform ini mengintegrasikan seluruh alur evaluasi internal universitas hingga transisi pendaftaran ke tahap nasional secara persisten, ramah tema (*dark/light mode*), dan terstruktur.
 
 ---
 
 ## ✨ Fitur Utama Platform
 
-### 👨‍🎓 Sisi Mahasiswa (User Dashboard)
-*   **Announcement Megaphone Banner**: Menampilkan pengumuman kritis atau informasi terbaru dari kampus secara *real-time* yang diluncurkan langsung oleh admin.
-*   **Dashboard Pelacakan Kompetisi**: Memantau progres kompetisi yang sedang diikuti (*not started*, *under review*, *approved*, *rejected*) lengkap dengan grafik progres.
-*   **Transkrip Nilai Penilaian Universitas (Review Scorecard)**: Mahasiswa dapat melihat detail nilai angka (0 - 100) untuk 5 kriteria penilaian (Inovasi, Kelayakan, Pemahaman Masalah, Presentasi, Tim) lengkap dengan daftar *Kelebihan*, *Area Perbaikan*, dan *Catatan Reviewer* yang diinput oleh admin.
-*   **Pendaftaran Tahap Nasional**: Mahasiswa yang proposalnya disetujui dapat langsung mendaftar ke tahap Nasional langsung dari dashboard.
-*   **Unified Dark & Light Mode**: Desain antarmuka adaptif yang sangat ramah mata, mengikuti preferensi tema browser atau tombol switch manual.
+### 👨‍🎓 Sisi Mahasiswa (Student Dashboard)
+*   **Announcement Megaphone Banner**: Penayangan pesan pengumuman darurat, perubahan jadwal, atau info sistem yang diterbitkan admin secara dinamis di bagian paling atas layar.
+*   **Progress Dashboard Tracking**: Visualisasi kemajuan kompetisi aktif (*University Review*, *Approved*, *National Stage*, *Reviewed*) lengkap dengan bilah kemajuan berwarna.
+*   **Interactive Review Scorecard**: Mahasiswa dapat melihat detail nilai kualitatif per-kriteria kelulusan (Inovasi, Kelayakan, Tim, dll.) yang disajikan dengan diagram progres visual, daftar kelebihan proposal, area pembenahan, serta catatan kaki dari reviewer kampus.
+*   **Akses Registrasi Cepat**: Akses langsung ke pendaftaran tingkat nasional begitu proposal universitas dinyatakan lolos.
 
-### 👩‍💼 Sisi Administrator (Admin Panel)
-*   **Campus Competition Metrics (Recharts Curve)**: Grafik statistik area visual yang ramah tema (*dark/light*) untuk menganalisis tren pendaftaran dan jumlah proposal masuk secara bulanan.
-*   **Kurasi Cepat & Live Sync**: Tombol switch untuk menyematkan status **★ Featured** dan **Recommended** pada kompetisi yang langsung menyinkronkan data katalog di beranda depan secara instan.
-*   **Visual Poster Picker Grid**: Form modal tambah/edit kompetisi dilengkapi pemilih poster gambar dari preset cantik Telkom University, pratinjau gambar instan, serta input URL poster kustom dari web.
-*   **Sistem Evaluasi Proposal Bergradasi**: Panel penilaian proposal di tab Submissions dengan input rentang angka, kelebihan/kekurangan, komentar, yang terhubung langsung ke dashboard mahasiswa.
-*   **CSV Exporter**: Mengekspor daftar partisipan mahasiswa ke format `.csv` (Excel-compatible) langsung dari browser dengan sekali klik.
-*   **Dispatcher Broadcast Alerts**: Modul megaphone untuk mengirim pengumuman darurat atau sistem global ke seluruh mahasiswa.
+### 👩‍💼 Sisi Administrator (Admin Workspace)
+*   **Interactive Analytics (Recharts)**: Grafik visual dinamis yang memetakan tren pendaftaran bulanan dan proposal masuk yang ramah tema (*dark/light*).
+*   **Live Curation Badges**: Tombol curating **Featured** dan **Recommended** pada tabel kompetisi untuk mengontrol penayangan slider halaman depan secara *real-time*.
+*   **Visual Poster Picker & Previews**: Box formulir kompetisi modern yang dilengkapi picker poster kategori Telkom University serta preview banner seketika sebelum disimpan.
+*   **Evaluation Scoreboard Form**: Papan input penilaian range slider (0-100) interaktif, strengths list, improvements list, dan ulasan penilai yang terhubung secara instan.
+*   **Excel/CSV Exporter**: Mengekspor database partisipan aktif kampus ke berkas spreadsheet `.csv` langsung dari browser dalam hitungan milidetik.
+*   **Dispatcher Mega Alerts**: Pembuatan alert broadcast global dengan pilihan tingkatan urgensi (`Info`, `Warning`, `Critical`).
 
----
-
-## 💻 Memulai (Getting Started)
-
-### 📌 Prasyarat (Prerequisites)
-Pastikan Anda sudah menginstal:
-*   [Node.js](https://nodejs.org/) (versi 18 atau lebih tinggi)
-*   npm atau pnpm
-
----
-
-### 🎨 1. Panduan Frontend (`/frontend`)
-
-Frontend dibangun menggunakan **React**, **Vite**, **TypeScript**, dan **Tailwind CSS v4**.
-
-#### Setup & Instalasi
-1. Masuk ke direktori frontend:
-   ```bash
-   cd frontend
-   ```
-2. Instal dependensi:
-   ```bash
-   npm install
-   ```
-3. Jalankan server lokal untuk mode pengembangan:
-   ```bash
-   npm run dev
-   ```
-   Aplikasi akan berjalan di `http://localhost:5173` (atau port alternatif berikutnya seperti `5174`).
-
-#### Build Produksi
-Untuk mengompilasi dan mengoptimalkan aplikasi client ke folder `/dist` siap deploy:
-```bash
-npm run build
-```
-
----
-
-### ⚙️ 2. Panduan Backend (`/backend`)
-
-Backend dibangun menggunakan **Node.js**, **Express**, **Supabase** (sebagai Database & Auth Layer), dan **Zod** untuk validasi skema API.
-
-#### Setup & Instalasi
-1. Masuk ke direktori backend:
-   ```bash
-   cd backend
-   ```
-2. Instal dependensi:
-   ```bash
-   npm install
-   ```
-3. Konfigurasi file `.env` (salin dari `.env.example`):
-   ```bash
-   cp .env.example .env
-   ```
-   Isi variabel lingkungan berikut dengan kredensial Supabase Anda:
-   ```env
-   PORT=5000
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
-   JWT_SECRET=your_jwt_secret
-   ```
-4. Jalankan server backend untuk mode pengembangan:
-   ```bash
-   npm run dev
-   ```
-   Server API akan berjalan di `http://localhost:5000`.
-
-#### Fitur & Endpoint API
-*   **Dokumentasi Swagger**: Akses `/api-docs` saat server backend berjalan untuk melihat panduan interaktif skema API RESTful.
-*   **Skema Validasi**: Menggunakan **Zod** untuk menolak input data yang tidak valid di level middleware sebelum masuk database.
-*   **Testing**: Unit testing backend menggunakan **Jest** dan **Supertest**:
-    ```bash
-    npm run test
-    ```
-
----
-
-## 🛠️ Teknologi & Pustaka Utama
-
-| Sektor | Teknologi / Pustaka Utama |
-| :--- | :--- |
-| **Frontend** | React, Vite, TypeScript, Tailwind CSS v4, React Router v7, Radix UI |
-| **Visual & Animasi** | Lucide React (Icons), Motion/React (Framer Motion), Recharts (Charts) |
-| **Backend API** | Node.js, Express, Supabase JS, Cors, Helmet, Multer (Uploads) |
-| **Validasi & Logger** | Zod (Validation), Winston (Logging), Morgan (HTTP logger) |
-| **Dokumentasi & Tes** | Swagger UI Express, Jest, Supertest |

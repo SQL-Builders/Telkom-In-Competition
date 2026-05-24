@@ -2,6 +2,7 @@ export const appPaths = {
   home: '/',
   login: '/login',
   register: '/register',
+  forgotPassword: '/forgot-password',
   explore: '/explore',
   dashboard: '/dashboard',
   myCompetitions: '/my-competitions',

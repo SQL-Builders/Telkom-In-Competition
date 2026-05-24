@@ -371,9 +371,13 @@ export function LoginPage() {
                 />
                 <span className="text-sm text-white/40">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-[#C8102E] hover:underline font-semibold">
+              <button
+                type="button"
+                onClick={() => navigate(appPaths.forgotPassword)}
+                className="text-sm text-[#C8102E] hover:underline font-semibold bg-transparent border-none cursor-pointer p-0"
+              >
                 Forgot Password?
-              </a>
+              </button>
             </div>
 
             {/* Submit */}
