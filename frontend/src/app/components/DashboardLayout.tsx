@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { appPaths } from '../data/paths';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,17 +23,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { logout } = useAuth();
+  const { darkMode } = useTheme();
+
+  const sidebarBg = darkMode ? 'bg-[#0F172A] border-gray-800' : 'bg-white border-gray-200';
+  const navItemInactive = darkMode ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-600 hover:bg-gray-100';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
       {/* Sidebar - Desktop */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 hidden lg:block">
+      <aside className={`fixed left-0 top-0 h-full w-64 border-r hidden lg:block ${sidebarBg}`}>
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8 cursor-pointer" onClick={() => navigate(appPaths.home)}>
             <div className="w-10 h-10 bg-[#C8102E] rounded-lg flex items-center justify-center">
               <Trophy className="w-6 h-6 text-white" />
             </div>
-            <span className="text-lg font-bold text-[#333333]">
+            <span className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-[#333333]'}`}>
               Telkom-In-<span className="text-[#C8102E]">Comp</span>
             </span>
           </div>
@@ -46,9 +51,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   key={item.path}
                   onClick={() => navigate(item.path)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    isActive
-                      ? 'bg-[#C8102E] text-white shadow-lg'
-                      : 'text-gray-600 hover:bg-gray-100'
+                    isActive ? 'bg-[#C8102E] text-white shadow-lg' : navItemInactive
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -59,20 +62,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </nav>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
+        <div className={`absolute bottom-0 left-0 right-0 p-6 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
           <button
             onClick={() => navigate(appPaths.home)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-all"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${navItemInactive}`}
           >
             <User className="w-5 h-5" />
             <span className="font-medium">Profile</span>
           </button>
           <button
-            onClick={() => {
-              logout();
-              navigate(appPaths.home);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all mt-2"
+            onClick={() => { logout(); navigate(appPaths.home); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all mt-2"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Logout</span>
@@ -81,16 +81,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center justify-between px-6">
+      <div className={`lg:hidden fixed top-0 left-0 right-0 h-16 border-b z-50 flex items-center justify-between px-6 ${sidebarBg}`}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-[#C8102E] rounded-lg flex items-center justify-center">
             <Trophy className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-[#333333]">
+          <span className={`font-bold ${darkMode ? 'text-white' : 'text-[#333333]'}`}>
             Telkom-In-<span className="text-[#C8102E]">Comp</span>
           </span>
         </div>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className={darkMode ? 'text-white' : 'text-gray-800'}
+        >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
@@ -102,7 +105,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             initial={{ opacity: 0, x: -300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -300 }}
-            className="lg:hidden fixed inset-0 bg-white z-40 pt-20 px-6"
+            className={`lg:hidden fixed inset-0 z-40 pt-20 px-6 ${darkMode ? 'bg-[#0F172A]' : 'bg-white'}`}
           >
             <nav className="space-y-2">
               {navigation.map((item) => {
@@ -111,14 +114,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 return (
                   <button
                     key={item.path}
-                    onClick={() => {
-                      navigate(item.path);
-                      setMobileMenuOpen(false);
-                    }}
+                    onClick={() => { navigate(item.path); setMobileMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                      isActive
-                        ? 'bg-[#C8102E] text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
+                      isActive ? 'bg-[#C8102E] text-white' : navItemInactive
                     }`}
                   >
                     <Icon className="w-5 h-5" />

@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface FilterBarProps {
   searchTerm?: string;
@@ -21,8 +22,18 @@ export function FilterBar({
   onDeadlineChange = () => {},
   onLevelChange = () => {},
 }: FilterBarProps) {
+  const { darkMode } = useTheme();
+
+  const inputBase = `px-4 py-3.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent appearance-none cursor-pointer font-medium transition-colors ${
+    darkMode
+      ? 'bg-[#1E293B] border-gray-700 text-gray-200'
+      : 'bg-gray-50 border-gray-200 text-gray-700'
+  }`;
+
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-20 z-40">
+    <div className={`border-b sticky top-20 z-40 transition-colors duration-300 ${
+      darkMode ? 'bg-[#0F172A] border-gray-800' : 'bg-white border-gray-200'
+    }`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-6">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
@@ -32,7 +43,11 @@ export function FilterBar({
               value={searchTerm}
               onChange={(e) => onSearchTermChange(e.target.value)}
               placeholder="Search competitions by name, category, or keyword..."
-              className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent transition-all"
+              className={`w-full pl-12 pr-4 py-3.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent transition-all ${
+                darkMode
+                  ? 'bg-[#1E293B] border-gray-700 text-gray-200 placeholder-gray-500'
+                  : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+              }`}
             />
           </div>
 
@@ -40,7 +55,7 @@ export function FilterBar({
             <select
               value={category}
               onChange={(e) => onCategoryChange(e.target.value)}
-              className="px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent appearance-none cursor-pointer min-w-[140px] font-medium text-gray-700"
+              className={`${inputBase} min-w-[140px]`}
             >
               <option value="all">All Categories</option>
               <option value="uiux">UI/UX</option>
@@ -53,7 +68,7 @@ export function FilterBar({
             <select
               value={deadline}
               onChange={(e) => onDeadlineChange(e.target.value)}
-              className="px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent appearance-none cursor-pointer min-w-[140px] font-medium text-gray-700"
+              className={`${inputBase} min-w-[140px]`}
             >
               <option value="all">All Deadlines</option>
               <option value="week">This Week</option>
@@ -64,7 +79,7 @@ export function FilterBar({
             <select
               value={level}
               onChange={(e) => onLevelChange(e.target.value)}
-              className="px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent appearance-none cursor-pointer min-w-[140px] font-medium text-gray-700"
+              className={`${inputBase} min-w-[140px]`}
             >
               <option value="all">All Levels</option>
               <option value="national">National</option>

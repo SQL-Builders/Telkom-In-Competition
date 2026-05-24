@@ -1,15 +1,18 @@
 import { motion } from 'motion/react';
 import { competitionHighlights } from '../data/competitions';
+import { useTheme } from '../context/ThemeContext';
 
 export function HighlightSection() {
+  const { darkMode } = useTheme();
+
   return (
-    <section className="py-20 bg-gray-50">
+    <section className={`py-20 transition-colors duration-300 ${darkMode ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="mb-12">
-          <h2 className="text-4xl font-bold text-[#333333] mb-4">
+          <h2 className={`text-4xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-[#333333]'}`}>
             Competition Highlights
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Browse through our visual showcase of exciting competitions
           </p>
         </div>
@@ -42,3 +45,4 @@ export function HighlightSection() {
     </section>
   );
 }
+

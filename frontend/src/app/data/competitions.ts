@@ -579,6 +579,95 @@ export const participants = [
   { id: 5, name: 'Mark Lee', email: 'mark@student.telkomuniversity.ac.id', university: 'Telkom University', competitions: 4, status: 'inactive' },
 ];
 
+// ── LOCAL STORAGE SYNC LAYER ──
+const isClient = typeof window !== 'undefined';
+
+const loadPersistedData = () => {
+  if (!isClient) return;
+
+  const storedComps = localStorage.getItem('telkom-in-competition:competitions');
+  if (storedComps) {
+    competitions.length = 0;
+    competitions.push(...JSON.parse(storedComps));
+  } else {
+    localStorage.setItem('telkom-in-competition:competitions', JSON.stringify(competitions));
+  }
+
+  const storedUserComps = localStorage.getItem('telkom-in-competition:user_competitions');
+  if (storedUserComps) {
+    userCompetitions.length = 0;
+    userCompetitions.push(...JSON.parse(storedUserComps));
+  } else {
+    localStorage.setItem('telkom-in-competition:user_competitions', JSON.stringify(userCompetitions));
+  }
+
+  const storedResults = localStorage.getItem('telkom-in-competition:review_results');
+  if (storedResults) {
+    reviewResults.length = 0;
+    reviewResults.push(...JSON.parse(storedResults));
+  } else {
+    localStorage.setItem('telkom-in-competition:review_results', JSON.stringify(reviewResults));
+  }
+
+  const storedSubs = localStorage.getItem('telkom-in-competition:submissions');
+  if (storedSubs) {
+    submissions.length = 0;
+    submissions.push(...JSON.parse(storedSubs));
+  } else {
+    localStorage.setItem('telkom-in-competition:submissions', JSON.stringify(submissions));
+  }
+
+  const storedParts = localStorage.getItem('telkom-in-competition:participants');
+  if (storedParts) {
+    participants.length = 0;
+    participants.push(...JSON.parse(storedParts));
+  } else {
+    localStorage.setItem('telkom-in-competition:participants', JSON.stringify(participants));
+  }
+};
+
+loadPersistedData();
+
+export function syncCompetitions(newCompetitions: typeof competitions) {
+  competitions.length = 0;
+  competitions.push(...newCompetitions);
+  if (isClient) {
+    localStorage.setItem('telkom-in-competition:competitions', JSON.stringify(newCompetitions));
+  }
+}
+
+export function syncSubmissions(newSubmissions: typeof submissions) {
+  submissions.length = 0;
+  submissions.push(...newSubmissions);
+  if (isClient) {
+    localStorage.setItem('telkom-in-competition:submissions', JSON.stringify(newSubmissions));
+  }
+}
+
+export function syncParticipants(newParticipants: typeof participants) {
+  participants.length = 0;
+  participants.push(...newParticipants);
+  if (isClient) {
+    localStorage.setItem('telkom-in-competition:participants', JSON.stringify(newParticipants));
+  }
+}
+
+export function syncUserCompetitions(newUserCompetitions: typeof userCompetitions) {
+  userCompetitions.length = 0;
+  userCompetitions.push(...newUserCompetitions);
+  if (isClient) {
+    localStorage.setItem('telkom-in-competition:user_competitions', JSON.stringify(newUserCompetitions));
+  }
+}
+
+export function syncReviewResults(newReviewResults: typeof reviewResults) {
+  reviewResults.length = 0;
+  reviewResults.push(...newReviewResults);
+  if (isClient) {
+    localStorage.setItem('telkom-in-competition:review_results', JSON.stringify(newReviewResults));
+  }
+}
+
 export const bookmarkedCompetitionIds = [1, 3, 4, 6];
 // Generics: Record<number, string> memetakan id kompetisi ke tanggal bookmark
 // sehingga key harus berupa angka dan value harus berupa string tanggal.

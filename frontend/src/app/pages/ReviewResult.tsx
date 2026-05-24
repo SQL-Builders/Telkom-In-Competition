@@ -4,20 +4,27 @@ import { useNavigate, useParams } from 'react-router';
 import { Navbar } from '../components/Navbar';
 import { getCompetitionById, getReviewResultByCompetitionId } from '../data/competitions';
 import { appPaths } from '../data/paths';
+import { useTheme } from '../context/ThemeContext';
 
 export function ReviewResult() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { darkMode } = useTheme();
   const competition = getCompetitionById(id);
   const reviewResult = getReviewResultByCompetitionId(id);
 
+  const cardBg = darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200';
+  const heading = darkMode ? 'text-white' : 'text-[#333333]';
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+  const textBody = darkMode ? 'text-gray-300' : 'text-gray-700';
+
   if (!competition || !reviewResult) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
         <Navbar />
         <div className="max-w-3xl mx-auto px-6 py-16 text-center">
-          <h1 className="text-3xl font-bold text-[#333333] mb-3">Review Result Not Found</h1>
-          <p className="text-gray-600 mb-8">No review result is available for this competition yet.</p>
+          <h1 className={`text-3xl font-bold mb-3 ${heading}`}>Review Result Not Found</h1>
+          <p className={`mb-8 ${textMuted}`}>No review result is available for this competition yet.</p>
           <button
             onClick={() => navigate(appPaths.myCompetitions)}
             className="px-6 py-3 bg-[#C8102E] text-white font-bold rounded-xl hover:bg-[#A00D25] transition-colors"
@@ -32,18 +39,19 @@ export function ReviewResult() {
   const approved = reviewResult.status === 'approved';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
       <Navbar />
       <div className="p-6 lg:p-12">
         <button
           onClick={() => navigate(appPaths.myCompetitions)}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#C8102E] mb-8 transition-colors"
+          className={`flex items-center gap-2 mb-8 transition-colors hover:text-[#C8102E] ${textMuted}`}
         >
           <ArrowLeft className="w-5 h-5" />
           Back to My Competitions
         </button>
 
         <div className="max-w-4xl mx-auto">
+          {/* Status Banner */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -75,17 +83,18 @@ export function ReviewResult() {
             </div>
           </motion.div>
 
-          <div
-            className={`bg-white rounded-2xl p-8 border-2 mb-6 ${
-              approved ? 'border-green-300 shadow-lg shadow-green-100' : 'border-red-300 shadow-lg shadow-red-100'
-            }`}
-          >
-            <h2 className="text-2xl font-bold text-[#333333] mb-6">Overall Score</h2>
+          {/* Overall Score */}
+          <div className={`rounded-2xl p-8 border-2 mb-6 ${
+            approved
+              ? darkMode ? 'bg-[#1E293B] border-green-700 shadow-lg shadow-green-900/20' : 'bg-white border-green-300 shadow-lg shadow-green-100'
+              : darkMode ? 'bg-[#1E293B] border-red-800 shadow-lg shadow-red-900/20' : 'bg-white border-red-300 shadow-lg shadow-red-100'
+          }`}>
+            <h2 className={`text-2xl font-bold mb-6 ${heading}`}>Overall Score</h2>
             <div className="flex items-center justify-center mb-6">
               <div className="text-center">
-                <div className={`text-6xl font-bold mb-2 ${approved ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-6xl font-bold mb-2 ${approved ? 'text-green-500' : 'text-red-500'}`}>
                   {reviewResult.overallScore}
-                  <span className="text-3xl text-gray-400">/{reviewResult.maxScore}</span>
+                  <span className={`text-3xl ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>/{reviewResult.maxScore}</span>
                 </div>
                 <div className={`inline-block px-6 py-2 rounded-full font-bold text-white mb-3 ${approved ? 'bg-green-500' : 'bg-red-500'}`}>
                   {approved ? 'LOLOS SELEKSI' : 'TIDAK LOLOS'}
@@ -97,7 +106,7 @@ export function ReviewResult() {
                       className={`w-6 h-6 ${
                         star <= Math.round(reviewResult.overallScore / 20)
                           ? 'text-yellow-500 fill-yellow-500'
-                          : 'text-gray-300'
+                          : darkMode ? 'text-gray-600' : 'text-gray-300'
                       }`}
                     />
                   ))}
@@ -109,12 +118,10 @@ export function ReviewResult() {
               {reviewResult.scores.map((item) => (
                 <div key={item.criteria}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-gray-700">{item.criteria}</span>
-                    <span className="font-bold text-[#333333]">
-                      {item.score}/{item.maxScore}
-                    </span>
+                    <span className={`font-semibold ${textBody}`}>{item.criteria}</span>
+                    <span className={`font-bold ${heading}`}>{item.score}/{item.maxScore}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className={`w-full rounded-full h-3 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <div
                       className={`h-3 rounded-full transition-all ${
                         item.score >= 70 ? 'bg-green-500' : item.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
@@ -127,19 +134,20 @@ export function ReviewResult() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 border border-gray-200 mb-6">
-            <h2 className="text-2xl font-bold text-[#333333] mb-6">Detailed Feedback</h2>
+          {/* Detailed Feedback */}
+          <div className={`rounded-2xl p-8 border mb-6 ${cardBg}`}>
+            <h2 className={`text-2xl font-bold mb-6 ${heading}`}>Detailed Feedback</h2>
 
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-                <h3 className="text-xl font-bold text-[#333333]">Strengths</h3>
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h3 className={`text-xl font-bold ${heading}`}>Strengths</h3>
               </div>
               <div className="space-y-3">
                 {reviewResult.feedback.strengths.map((strength) => (
-                  <div key={strength} className="flex items-start gap-3 bg-green-50 p-4 rounded-xl">
+                  <div key={strength} className={`flex items-start gap-3 p-4 rounded-xl ${darkMode ? 'bg-green-900/20 border border-green-800/40' : 'bg-green-50'}`}>
                     <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0" />
-                    <p className="text-gray-700">{strength}</p>
+                    <p className={textBody}>{strength}</p>
                   </div>
                 ))}
               </div>
@@ -147,60 +155,65 @@ export function ReviewResult() {
 
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <AlertCircle className="w-6 h-6 text-orange-600" />
-                <h3 className="text-xl font-bold text-[#333333]">Areas for Improvement</h3>
+                <AlertCircle className="w-6 h-6 text-orange-500" />
+                <h3 className={`text-xl font-bold ${heading}`}>Areas for Improvement</h3>
               </div>
               <div className="space-y-3">
                 {reviewResult.feedback.improvements.map((improvement) => (
-                  <div key={improvement} className="flex items-start gap-3 bg-orange-50 p-4 rounded-xl">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 flex-shrink-0" />
-                    <p className="text-gray-700">{improvement}</p>
+                  <div key={improvement} className={`flex items-start gap-3 p-4 rounded-xl ${darkMode ? 'bg-orange-900/20 border border-orange-800/40' : 'bg-orange-50'}`}>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
+                    <p className={textBody}>{improvement}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className={`bg-white rounded-2xl p-8 border-2 mb-6 ${approved ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'}`}>
+          {/* Reviewer Notes */}
+          <div className={`rounded-2xl p-8 border-2 mb-6 ${
+            approved
+              ? darkMode ? 'bg-[#1E293B] border-green-700/50' : 'bg-green-50/30 border-green-200'
+              : darkMode ? 'bg-[#1E293B] border-red-800/50' : 'bg-red-50/30 border-red-200'
+          }`}>
             <div className="flex items-center gap-2 mb-4">
-              <FileText className={`w-6 h-6 ${approved ? 'text-green-600' : 'text-red-600'}`} />
-              <h3 className="text-xl font-bold text-[#333333]">Catatan Reviewer</h3>
+              <FileText className={`w-6 h-6 ${approved ? 'text-green-500' : 'text-red-500'}`} />
+              <h3 className={`text-xl font-bold ${heading}`}>Catatan Reviewer</h3>
             </div>
-            <div className={`rounded-xl p-6 border-l-4 bg-white ${approved ? 'border-green-500' : 'border-red-500'}`}>
-              <p className="text-gray-700 leading-relaxed font-medium">"{reviewResult.reviewerComments}"</p>
+            <div className={`rounded-xl p-6 border-l-4 ${
+              approved ? 'border-green-500' : 'border-red-500'
+            } ${darkMode ? 'bg-gray-800/60' : 'bg-white'}`}>
+              <p className={`leading-relaxed font-medium ${textBody}`}>"{reviewResult.reviewerComments}"</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 border border-gray-200 mb-6">
-            <h3 className="text-xl font-bold text-[#333333] mb-4">Submission Details</h3>
+          {/* Submission Details */}
+          <div className={`rounded-2xl p-8 border mb-6 ${cardBg}`}>
+            <h3 className={`text-xl font-bold mb-4 ${heading}`}>Submission Details</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Team Name</p>
-                <p className="font-semibold text-gray-900">{reviewResult.teamName}</p>
+                <p className={`text-sm mb-1 ${textMuted}`}>Team Name</p>
+                <p className={`font-semibold ${heading}`}>{reviewResult.teamName}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Competition</p>
-                <p className="font-semibold text-gray-900">{competition.title}</p>
+                <p className={`text-sm mb-1 ${textMuted}`}>Competition</p>
+                <p className={`font-semibold ${heading}`}>{competition.title}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Submitted Date</p>
-                <p className="font-semibold text-gray-900">
-                  {new Date(reviewResult.submittedDate).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                <p className={`text-sm mb-1 ${textMuted}`}>Submitted Date</p>
+                <p className={`font-semibold ${heading}`}>
+                  {new Date(reviewResult.submittedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Status</p>
-                <p className={`font-semibold ${approved ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-sm mb-1 ${textMuted}`}>Status</p>
+                <p className={`font-semibold ${approved ? 'text-green-500' : 'text-red-500'}`}>
                   {approved ? 'Approved' : 'Not Approved'}
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Actions */}
           <div className="flex gap-4">
             {reviewResult.canProceedToNational && (
               <motion.button
@@ -216,7 +229,9 @@ export function ReviewResult() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(appPaths.myCompetitions)}
-              className="flex-1 py-4 bg-gray-100 text-[#333333] font-bold text-lg rounded-xl hover:bg-gray-200 transition-colors"
+              className={`flex-1 py-4 font-bold text-lg rounded-xl transition-colors ${
+                darkMode ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-[#333333] hover:bg-gray-200'
+              }`}
             >
               Back to My Competitions
             </motion.button>

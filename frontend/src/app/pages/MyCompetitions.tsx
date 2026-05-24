@@ -4,6 +4,7 @@ import { Calendar, Clock, CheckCircle, AlertCircle, Eye, Upload } from 'lucide-r
 import { useNavigate } from 'react-router';
 import { myCompetitions, formatDaysLeft } from '../data/competitions';
 import { appPaths } from '../data/paths';
+import { useTheme } from '../context/ThemeContext';
 
 const statusConfig = {
   'not-started': {
@@ -40,41 +41,46 @@ const statusConfig = {
 
 export function MyCompetitions() {
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
+
+  const cardBg = darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200';
+  const headingColor = darkMode ? 'text-white' : 'text-[#333333]';
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
       <Navbar />
       <div className="p-6 lg:p-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#333333] mb-3">My Competitions</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className={`text-4xl font-bold mb-3 ${headingColor}`}>My Competitions</h1>
+          <p className={`text-lg ${textMuted}`}>
             Track your progress and manage your competition entries
           </p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 border border-gray-200">
-            <div className="text-3xl font-bold text-[#333333] mb-2">{myCompetitions.length}</div>
-            <div className="text-gray-600">Total Competitions</div>
+          <div className={`rounded-2xl p-6 border ${cardBg}`}>
+            <div className={`text-3xl font-bold mb-2 ${headingColor}`}>{myCompetitions.length}</div>
+            <div className={textMuted}>Total Competitions</div>
           </div>
-          <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
-            <div className="text-3xl font-bold text-yellow-700 mb-2">
+          <div className={`rounded-2xl p-6 border ${darkMode ? 'bg-yellow-900/30 border-yellow-800' : 'bg-yellow-50 border-yellow-200'}`}>
+            <div className={`text-3xl font-bold mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
               {myCompetitions.filter(c => c.status === 'university-pending').length}
             </div>
-            <div className="text-yellow-700">Under Review</div>
+            <div className={darkMode ? 'text-yellow-400' : 'text-yellow-700'}>Under Review</div>
           </div>
-          <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
-            <div className="text-3xl font-bold text-green-700 mb-2">
+          <div className={`rounded-2xl p-6 border ${darkMode ? 'bg-green-900/30 border-green-800' : 'bg-green-50 border-green-200'}`}>
+            <div className={`text-3xl font-bold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
               {myCompetitions.filter(c => c.status === 'university-approved').length}
             </div>
-            <div className="text-green-700">Approved</div>
+            <div className={darkMode ? 'text-green-400' : 'text-green-700'}>Approved</div>
           </div>
-          <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <div className="text-3xl font-bold text-blue-700 mb-2">
+          <div className={`rounded-2xl p-6 border ${darkMode ? 'bg-blue-900/30 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
+            <div className={`text-3xl font-bold mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
               {myCompetitions.filter(c => c.status === 'national-submitted' || c.status === 'national-reviewed').length}
             </div>
-            <div className="text-blue-700">National Stage</div>
+            <div className={darkMode ? 'text-blue-400' : 'text-blue-700'}>National Stage</div>
           </div>
         </div>
 
@@ -91,7 +97,7 @@ export function MyCompetitions() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.01 }}
-                className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-xl transition-all cursor-pointer"
+                className={`rounded-2xl border p-6 hover:shadow-xl transition-all cursor-pointer ${cardBg}`}
                 onClick={() => navigate(appPaths.competition(competition.id))}
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -109,11 +115,11 @@ export function MyCompetitions() {
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-[#333333] mb-3">
+                    <h3 className={`text-xl font-bold mb-3 ${headingColor}`}>
                       {competition.title}
                     </h3>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div className={`flex flex-wrap gap-4 text-sm ${textMuted}`}>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         <span>Deadline: {new Date(competition.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
@@ -138,10 +144,10 @@ export function MyCompetitions() {
                     {competition.status === 'not-started' && (
                       <div className="mt-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-gray-700">Progress</span>
-                          <span className="text-sm font-semibold text-gray-700">{competition.progress}%</span>
+                          <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Progress</span>
+                          <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{competition.progress}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className={`w-full rounded-full h-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                           <div
                             className="bg-[#C8102E] h-2 rounded-full transition-all"
                             style={{ width: `${competition.progress}%` }}
@@ -156,10 +162,7 @@ export function MyCompetitions() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(appPaths.competitionReview(competition.id));
-                        }}
+                        onClick={(e) => { e.stopPropagation(); navigate(appPaths.competitionReview(competition.id)); }}
                         className="px-6 py-3 bg-green-100 text-green-700 font-semibold rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2"
                       >
                         <Eye className="w-4 h-4" />
@@ -170,10 +173,7 @@ export function MyCompetitions() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(appPaths.competitionReview(competition.id));
-                        }}
+                        onClick={(e) => { e.stopPropagation(); navigate(appPaths.competitionReview(competition.id)); }}
                         className="px-6 py-3 bg-red-100 text-red-700 font-semibold rounded-xl hover:bg-red-200 transition-colors flex items-center gap-2"
                       >
                         <Eye className="w-4 h-4" />
@@ -184,10 +184,7 @@ export function MyCompetitions() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(appPaths.competitionProposal(competition.id));
-                        }}
+                        onClick={(e) => { e.stopPropagation(); navigate(appPaths.competitionProposal(competition.id)); }}
                         className="px-6 py-3 bg-[#C8102E] text-white font-semibold rounded-xl hover:bg-[#A00D25] transition-colors flex items-center gap-2"
                       >
                         <Upload className="w-4 h-4" />
@@ -198,10 +195,7 @@ export function MyCompetitions() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(appPaths.competitionRegistration(competition.id));
-                        }}
+                        onClick={(e) => { e.stopPropagation(); navigate(appPaths.competitionRegistration(competition.id)); }}
                         className="px-6 py-3 bg-[#C8102E] text-white font-semibold rounded-xl hover:bg-[#A00D25] transition-colors flex items-center gap-2"
                       >
                         <Upload className="w-4 h-4" />

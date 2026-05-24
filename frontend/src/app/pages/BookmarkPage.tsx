@@ -4,11 +4,14 @@ import { BookMarked, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { bookmarkedCompetitions } from '../data/competitions';
 import { useMemo, useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 export function BookmarkPage() {
   const [items, setItems] = useState(bookmarkedCompetitions);
   const [category, setCategory] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
+  const { darkMode } = useTheme();
+
   const visibleBookmarks = useMemo(() => {
     const filtered =
       category === 'all'
@@ -19,20 +22,24 @@ export function BookmarkPage() {
       if (sortBy === 'deadline') {
         return new Date(first.deadline).getTime() - new Date(second.deadline).getTime();
       }
-
       if (sortBy === 'name') {
         return first.title.localeCompare(second.title);
       }
-
       return new Date(second.bookmarkedDate).getTime() - new Date(first.bookmarkedDate).getTime();
     });
   }, [category, items, sortBy]);
-  const designCount = items.filter((competition) => ['UI/UX', 'Design'].includes(competition.category)).length;
-  const techCount = items.filter((competition) => ['IT', 'Data Science'].includes(competition.category)).length;
-  const businessCount = items.filter((competition) => competition.category === 'Business').length;
+
+  const designCount = items.filter((c) => ['UI/UX', 'Design'].includes(c.category)).length;
+  const techCount = items.filter((c) => ['IT', 'Data Science'].includes(c.category)).length;
+  const businessCount = items.filter((c) => c.category === 'Business').length;
+
+  const cardBg = darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200';
+  const selectClass = `px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent transition-colors ${
+    darkMode ? 'bg-[#1E293B] border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-700'
+  }`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
       <Navbar />
       <div className="p-6 lg:p-12">
         <div className="mb-8">
@@ -40,18 +47,20 @@ export function BookmarkPage() {
             <div className="w-12 h-12 bg-[#C8102E] rounded-xl flex items-center justify-center">
               <BookMarked className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-[#333333]">Bookmarks</h1>
+            <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-[#333333]'}`}>Bookmarks</h1>
           </div>
-          <p className="text-lg text-gray-600">
+          <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             You have {items.length} saved competitions
           </p>
         </div>
 
         {items.length === 0 ? (
-          <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-16 text-center">
-            <BookMarked className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-400 mb-2">No Bookmarks Yet</h3>
-            <p className="text-gray-500">
+          <div className={`rounded-2xl border-2 border-dashed p-16 text-center ${
+            darkMode ? 'border-gray-700' : 'border-gray-300'
+          }`}>
+            <BookMarked className={`w-16 h-16 mx-auto mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`} />
+            <h3 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>No Bookmarks Yet</h3>
+            <p className={darkMode ? 'text-gray-600' : 'text-gray-500'}>
               Start bookmarking competitions to save them for later
             </p>
           </div>
@@ -62,8 +71,8 @@ export function BookmarkPage() {
               <div className="flex gap-3">
                 <select
                   value={category}
-                  onChange={(event) => setCategory(event.target.value)}
-                  className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent"
+                  onChange={(e) => setCategory(e.target.value)}
+                  className={selectClass}
                 >
                   <option value="all">All Categories</option>
                   <option value="UI/UX">UI/UX</option>
@@ -74,8 +83,8 @@ export function BookmarkPage() {
                 </select>
                 <select
                   value={sortBy}
-                  onChange={(event) => setSortBy(event.target.value)}
-                  className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent"
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className={selectClass}
                 >
                   <option value="recent">Sort by: Recent</option>
                   <option value="deadline">Sort by: Deadline</option>
@@ -106,15 +115,19 @@ export function BookmarkPage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-                <h3 className="text-2xl font-bold text-[#333333] mb-2">No bookmarks match this filter</h3>
-                <p className="text-gray-600">Change the category filter to see more saved competitions.</p>
+              <div className={`rounded-2xl border p-12 text-center ${cardBg}`}>
+                <h3 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-[#333333]'}`}>
+                  No bookmarks match this filter
+                </h3>
+                <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                  Change the category filter to see more saved competitions.
+                </p>
               </div>
             )}
 
             {/* Collections Section */}
             <div className="mt-16">
-              <h2 className="text-2xl font-bold text-[#333333] mb-6">Collections</h2>
+              <h2 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-[#333333]'}`}>Collections</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.div
                   whileHover={{ scale: 1.02 }}

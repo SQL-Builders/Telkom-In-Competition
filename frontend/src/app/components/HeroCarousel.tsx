@@ -2,7 +2,9 @@ import { motion } from 'motion/react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import { useNavigate } from 'react-router';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const featuredCompetitions = [
   {
@@ -31,31 +33,40 @@ const featuredCompetitions = [
   },
 ];
 
-function NextArrow(props: any) {
-  const { onClick } = props;
+function NextArrow({ onClick, darkMode }: { onClick?: () => void; darkMode: boolean }) {
   return (
     <button
       onClick={onClick}
-      className="absolute right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+      className={`absolute right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
+        darkMode
+          ? 'bg-gray-800/90 hover:bg-gray-700 text-white'
+          : 'bg-white/90 hover:bg-white text-[#C8102E]'
+      }`}
     >
-      <ChevronRight className="w-6 h-6 text-[#C8102E]" />
+      <ChevronRight className="w-6 h-6" />
     </button>
   );
 }
 
-function PrevArrow(props: any) {
-  const { onClick } = props;
+function PrevArrow({ onClick, darkMode }: { onClick?: () => void; darkMode: boolean }) {
   return (
     <button
       onClick={onClick}
-      className="absolute left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+      className={`absolute left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 ${
+        darkMode
+          ? 'bg-gray-800/90 hover:bg-gray-700 text-white'
+          : 'bg-white/90 hover:bg-white text-[#C8102E]'
+      }`}
     >
-      <ChevronLeft className="w-6 h-6 text-[#C8102E]" />
+      <ChevronLeft className="w-6 h-6" />
     </button>
   );
 }
 
 export function HeroCarousel() {
+  const navigate = useNavigate();
+  const { darkMode } = useTheme();
+
   const settings = {
     dots: true,
     infinite: true,
@@ -64,15 +75,15 @@ export function HeroCarousel() {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 5000,
-    nextArrow: <NextArrow />,
-    prevArrow: <PrevArrow />,
+    nextArrow: <NextArrow darkMode={darkMode} />,
+    prevArrow: <PrevArrow darkMode={darkMode} />,
     pauseOnHover: true,
   };
 
   return (
-    <div className="relative w-full bg-gray-50">
+    <div className={`relative w-full transition-colors duration-300 ${darkMode ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
       <Slider {...settings}>
-        {featuredCompetitions.map((competition, index) => (
+        {featuredCompetitions.map((competition) => (
           <div key={competition.id}>
             <div className={`relative h-[500px] bg-gradient-to-r ${competition.gradient} overflow-hidden`}>
               <div className="absolute inset-0 bg-black/10" />
@@ -101,7 +112,9 @@ export function HeroCarousel() {
                   <div className="flex items-center gap-6 mb-8">
                     <div className="flex items-center gap-2 text-white/90">
                       <Calendar className="w-5 h-5" />
-                      <span className="font-medium">Deadline: {new Date(competition.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span className="font-medium">
+                        Deadline: {new Date(competition.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
                     </div>
                     <div className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg">
                       <span className="text-white font-medium">{competition.category}</span>
@@ -111,6 +124,7 @@ export function HeroCarousel() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/registerpage')}
                     className="px-8 py-4 bg-white text-[#C8102E] font-bold text-lg rounded-xl shadow-xl hover:shadow-2xl transition-all"
                   >
                     Register Now

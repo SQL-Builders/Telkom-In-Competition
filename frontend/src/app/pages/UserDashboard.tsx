@@ -1,15 +1,17 @@
 import { Navbar } from '../components/Navbar';
 import { motion } from 'motion/react';
-import { Trophy, Calendar, TrendingUp, Clock, ArrowRight, Flame } from 'lucide-react';
+import { Trophy, Calendar, TrendingUp, Clock, ArrowRight, Flame, Megaphone } from 'lucide-react';
 import { CompetitionCard } from '../components/CompetitionCard';
 import { useNavigate } from 'react-router';
 import { competitions, myCompetitions, recommendedCompetitions } from '../data/competitions';
 import { appPaths } from '../data/paths';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export function UserDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { darkMode } = useTheme();
   const today = new Date();
   const upcomingCompetitions = competitions.filter(
     (competition) => new Date(competition.deadline).getTime() >= today.getTime(),
@@ -53,10 +55,48 @@ export function UserDashboard() {
     },
   ];
 
+  const cardBg = darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200';
+  const headingColor = darkMode ? 'text-white' : 'text-[#333333]';
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+  const textSmall = darkMode ? 'text-gray-500' : 'text-gray-500';
+
+  const broadcasts = (() => {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem('telkom-in-competition:broadcasts');
+    return stored ? JSON.parse(stored) : [];
+  })();
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
       <Navbar />
       <div className="p-6 lg:p-12">
+        {broadcasts.length > 0 && (
+          <div className="mb-8">
+            {broadcasts.slice(0, 1).map((b: any) => (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                key={b.id}
+                className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-sm font-semibold shadow-sm ${
+                  b.urgency === 'critical'
+                    ? 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'
+                    : b.urgency === 'warning'
+                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'
+                      : 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Megaphone className="w-5 h-5 flex-shrink-0 animate-[bounce_2s_infinite]" />
+                  <span>
+                    <strong className="uppercase mr-1">{b.urgency}:</strong> {b.text}
+                  </span>
+                </div>
+                <span className="text-[10px] opacity-75">{b.date}</span>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="mb-12">
           <motion.div
@@ -99,16 +139,16 @@ export function UserDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all"
+                className={`rounded-2xl p-6 border hover:shadow-xl transition-all ${cardBg}`}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <div className="text-3xl font-bold text-[#333333] mb-1">{stat.value}</div>
-                <div className="text-gray-600 mb-2">{stat.label}</div>
-                <div className="text-sm text-gray-500">{stat.change}</div>
+                <div className={`text-3xl font-bold mb-1 ${headingColor}`}>{stat.value}</div>
+                <div className={`mb-2 ${textMuted}`}>{stat.label}</div>
+                <div className={`text-sm ${textSmall}`}>{stat.change}</div>
               </motion.div>
             );
           })}
@@ -118,8 +158,8 @@ export function UserDashboard() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-bold text-[#333333] mb-2">Recommended For You</h2>
-              <p className="text-gray-600">Based on your interests and skills</p>
+              <h2 className={`text-3xl font-bold mb-2 ${headingColor}`}>Recommended For You</h2>
+              <p className={textMuted}>Based on your interests and skills</p>
             </div>
             <button
               onClick={() => navigate(appPaths.explore)}
@@ -141,16 +181,19 @@ export function UserDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-white rounded-2xl p-8 border border-gray-200 cursor-pointer"
+            className={`rounded-2xl p-8 border cursor-pointer ${cardBg}`}
           >
-            <h3 className="text-xl font-bold text-[#333333] mb-2">Recent Activity</h3>
-            <p className="text-gray-600 mb-4">Track your latest submissions and updates</p>
+            <h3 className={`text-xl font-bold mb-2 ${headingColor}`}>Recent Activity</h3>
+            <p className={`mb-4 ${textMuted}`}>Track your latest submissions and updates</p>
             <div className="space-y-3">
               {myCompetitions.slice(0, 3).map((competition) => (
-                <div key={competition.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div
+                  key={competition.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg ${darkMode ? 'bg-gray-800/60' : 'bg-gray-50'}`}
+                >
                   <div className="w-2 h-2 bg-[#C8102E] rounded-full"></div>
-                  <span className="text-sm text-gray-700">{competition.title}</span>
-                  <span className="text-xs text-gray-500 ml-auto">{competition.status.replaceAll('-', ' ')}</span>
+                  <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{competition.title}</span>
+                  <span className={`text-xs ml-auto ${textSmall}`}>{competition.status.replaceAll('-', ' ')}</span>
                 </div>
               ))}
             </div>

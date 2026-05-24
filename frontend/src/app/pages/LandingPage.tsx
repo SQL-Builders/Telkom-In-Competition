@@ -1,4 +1,4 @@
-  import { Navbar } from '../components/Navbar';
+import { Navbar } from '../components/Navbar';
 import { HeroCarousel } from '../components/HeroCarousel';
 import { HighlightSection } from '../components/HighlightSection';
 import { Footer } from '../components/Footer';
@@ -8,23 +8,25 @@ import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { featuredCompetitions } from '../data/competitions';
 import { appPaths } from '../data/paths';
+import { useTheme } from '../context/ThemeContext';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0F172A]' : 'bg-white'}`}>
       <Navbar />
       <HeroCarousel />
 
-      <section className="py-20 bg-white">
+      <section className={`py-20 transition-colors duration-300 ${darkMode ? 'bg-[#0F172A]' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="text-center mb-16">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-5xl font-bold text-[#333333] mb-6"
+              className={`text-5xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-[#333333]'}`}
             >
               Featured Competitions
             </motion.h2>
@@ -33,7 +35,7 @@ export function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-gray-600"
+              className={`text-xl ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}
             >
               Discover amazing opportunities to showcase your skills
             </motion.p>
@@ -59,7 +61,7 @@ export function LandingPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(appPaths.register)}
-              className="px-8 py-4 bg-white border-2 border-[#C8102E] text-[#C8102E] font-bold text-lg rounded-xl hover:bg-[#C8102E] hover:text-white transition-colors shadow-lg"
+              className={`px-8 py-4 border-2 border-[#C8102E] text-[#C8102E] font-bold text-lg rounded-xl hover:bg-[#C8102E] hover:text-white transition-colors shadow-lg ${darkMode ? 'bg-transparent' : 'bg-white'}`}
             >
               Join Now
             </motion.button>

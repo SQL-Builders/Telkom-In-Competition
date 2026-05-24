@@ -3,6 +3,7 @@ import { FilterBar } from '../components/FilterBar';
 import { CompetitionCard } from '../components/CompetitionCard';
 import { competitions } from '../data/competitions';
 import { useMemo, useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 function normalizeFilterValue(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -13,6 +14,7 @@ export function ExplorePage() {
   const [category, setCategory] = useState('all');
   const [deadline, setDeadline] = useState('all');
   const [level, setLevel] = useState('all');
+  const { darkMode } = useTheme();
 
   const filteredCompetitions = useMemo(() => {
     const now = new Date();
@@ -42,7 +44,7 @@ export function ExplorePage() {
   }, [category, deadline, level, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
       <Navbar />
       <FilterBar
         searchTerm={searchTerm}
@@ -57,8 +59,10 @@ export function ExplorePage() {
 
       <div className="p-6 lg:p-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#333333] mb-3">Explore Competitions</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className={`text-4xl font-bold mb-3 ${darkMode ? 'text-white' : 'text-[#333333]'}`}>
+            Explore Competitions
+          </h1>
+          <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Discover {filteredCompetitions.length} amazing opportunities to showcase your skills
           </p>
         </div>
@@ -70,9 +74,15 @@ export function ExplorePage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-            <h2 className="text-2xl font-bold text-[#333333] mb-2">No competitions found</h2>
-            <p className="text-gray-600">Try changing the search keyword or filters.</p>
+          <div className={`rounded-2xl border p-12 text-center ${
+            darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'
+          }`}>
+            <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-[#333333]'}`}>
+              No competitions found
+            </h2>
+            <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+              Try changing the search keyword or filters.
+            </p>
           </div>
         )}
 
