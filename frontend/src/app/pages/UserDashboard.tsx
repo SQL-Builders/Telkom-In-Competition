@@ -1,12 +1,14 @@
 import { Navbar } from '../components/Navbar';
 import { motion } from 'motion/react';
-import { Trophy, Calendar, TrendingUp, Clock, ArrowRight, Flame, Megaphone } from 'lucide-react';
+import { Trophy, Calendar, TrendingUp, Clock, ArrowRight, Flame, Megaphone, AlertTriangle, Info, ShieldAlert } from 'lucide-react';
 import { CompetitionCard } from '../components/CompetitionCard';
 import { useNavigate } from 'react-router';
 import { competitions, myCompetitions, recommendedCompetitions } from '../data/competitions';
 import { appPaths } from '../data/paths';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useEffect, useState } from 'react';
+import { BroadcastManager, BroadcastObserver, BroadcastAlertFactory, Broadcast } from '../utils/broadcastPatterns';
 
 export function UserDashboard() {
   const navigate = useNavigate();
@@ -60,40 +62,66 @@ export function UserDashboard() {
   const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
   const textSmall = darkMode ? 'text-gray-500' : 'text-gray-500';
 
-  const broadcasts = (() => {
-    if (typeof window === 'undefined') return [];
-    const stored = localStorage.getItem('telkom-in-competition:broadcasts');
-    return stored ? JSON.parse(stored) : [];
-  })();
+  // -------------------------------------------------------------
+  // OBSERVER PATTERN: State untuk menerima update pengumuman
+  // -------------------------------------------------------------
+  const [activeBroadcasts, setActiveBroadcasts] = useState<Broadcast[]>([]);
+
+  useEffect(() => {
+    // SINGLETON PATTERN: Dapatkan instance tunggal global
+    const manager = BroadcastManager.getInstance();
+
+    // Mendaftarkan komponen ini sebagai Observer
+    const observer: BroadcastObserver = {
+      onBroadcastReceived: (broadcastsList) => {
+        setActiveBroadcasts(broadcastsList);
+      },
+    };
+
+    // Lakukan subscribe dan simpan fungsi unsubscribe
+    const unsubscribe = manager.subscribe(observer);
+
+    // Bersihkan pendaftaran saat komponen di-unmount agar tidak bocor memori
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0A0F1E]' : 'bg-gray-50'}`}>
       <Navbar />
       <div className="p-6 lg:p-12">
-        {broadcasts.length > 0 && (
+        {activeBroadcasts.length > 0 && (
           <div className="mb-8">
-            {broadcasts.slice(0, 1).map((b: any) => (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                key={b.id}
-                className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-sm font-semibold shadow-sm ${
-                  b.urgency === 'critical'
-                    ? 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'
-                    : b.urgency === 'warning'
-                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'
-                      : 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Megaphone className="w-5 h-5 flex-shrink-0 animate-[bounce_2s_infinite]" />
-                  <span>
-                    <strong className="uppercase mr-1">{b.urgency}:</strong> {b.text}
-                  </span>
-                </div>
-                <span className="text-[10px] opacity-75">{b.date}</span>
-              </motion.div>
-            ))}
+            {activeBroadcasts.slice(0, 1).map((b) => {
+              // FACTORY PATTERN: Buat alert visual polimorfis secara dinamis
+              const alertInstance = BroadcastAlertFactory.createAlert(b);
+              const colors = alertInstance.getColors();
+              const iconType = alertInstance.getIconType();
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={b.id}
+                  className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-sm font-semibold shadow-sm ${colors.bg} ${colors.border} ${colors.text}`}
+                >
+                  <div className="flex items-center gap-3">
+                    {iconType === 'critical' ? (
+                      <ShieldAlert className={`w-5 h-5 flex-shrink-0 animate-[pulse_1s_infinite] ${colors.iconColor}`} />
+                    ) : iconType === 'warning' ? (
+                      <AlertTriangle className={`w-5 h-5 flex-shrink-0 animate-[bounce_2s_infinite] ${colors.iconColor}`} />
+                    ) : (
+                      <Info className={`w-5 h-5 flex-shrink-0 ${colors.iconColor}`} />
+                    )}
+                    <span>
+                      <strong className="uppercase mr-1">{b.urgency}:</strong> {b.text}
+                    </span>
+                  </div>
+                  <span className="text-[10px] opacity-75">{b.date}</span>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BroadcastManager, BroadcastObserver } from '../utils/broadcastPatterns';
 import {
   Trophy, LayoutDashboard, FolderKanban, Users, FileCheck,
   Plus, Edit, Trash2, Eye, CheckCircle, XCircle, Menu, X as CloseIcon, Search, MessageCircle, LogOut, Calendar, MapPin, DollarSign, AlertCircle, Sun, Moon, Sparkles, Award, ShieldAlert, Download, Image, Megaphone, Bell
@@ -32,7 +33,7 @@ const adminNavigation = [
   { name: 'Submissions', path: 'submissions', icon: FileCheck },
 ];
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   active: 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400',
   completed: 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-400',
   draft: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400',
@@ -98,12 +99,21 @@ export function AdminDashboard() {
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [announcementText, setAnnouncementText] = useState('');
   const [announcementUrgency, setAnnouncementUrgency] = useState<'info' | 'warning' | 'critical'>('info');
-  const [broadcastsList, setBroadcastsList] = useState<any[]>(() => {
-    const stored = localStorage.getItem('telkom-in-competition:broadcasts');
-    return stored ? JSON.parse(stored) : [
-      { id: 1, text: 'Welcome to the new Telkom-In-Competition Admin Portal! Real-time stats are live.', urgency: 'info', date: '2026-05-24' }
-    ];
-  });
+  const [broadcastsList, setBroadcastsList] = useState<any[]>([]);
+
+  // OBSERVER PATTERN: Subscribe dashboard admin ke BroadcastManager Singleton
+  useEffect(() => {
+    const manager = BroadcastManager.getInstance();
+    const observer: BroadcastObserver = {
+      onBroadcastReceived: (list) => {
+        setBroadcastsList(list);
+      }
+    };
+    const unsubscribe = manager.subscribe(observer);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Grading & Evaluation states
   const [gradingScores, setGradingScores] = useState({
@@ -232,13 +242,13 @@ export function AdminDashboard() {
 
   const handleToggleCuration = (id: number, field: 'featured' | 'recommended') => {
     const updated = competitions.map(c => 
-      c.id === id ? { ...c, [field]: !c[field] } : c
+      c.id === id ? { ...c, [field]: !c[field as keyof typeof c] } : c
     );
     setCompetitions(updated);
     
     const newGlobal = globalCompetitions.map(gc => {
       if (gc.id === id) {
-        return { ...gc, [field]: !gc[field] };
+        return { ...gc, [field]: !gc[field as keyof typeof gc] };
       }
       return gc;
     });
@@ -367,16 +377,9 @@ export function AdminDashboard() {
   const handleSendBroadcast = () => {
     if (!announcementText.trim()) return;
     
-    const newBroadcast = {
-      id: Date.now(),
-      text: announcementText,
-      urgency: announcementUrgency,
-      date: new Date().toISOString().split('T')[0],
-    };
+    // SINGLETON PATTERN & SUBJECT: Tambahkan pengumuman baru melalui manager tunggal
+    BroadcastManager.getInstance().addBroadcast(announcementText, announcementUrgency);
     
-    const updated = [newBroadcast, ...broadcastsList];
-    setBroadcastsList(updated);
-    localStorage.setItem('telkom-in-competition:broadcasts', JSON.stringify(updated));
     setAnnouncementText('');
     setShowBroadcastModal(false);
   };

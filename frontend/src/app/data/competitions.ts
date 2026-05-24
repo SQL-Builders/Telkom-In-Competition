@@ -700,9 +700,9 @@ export const myCompetitions = userCompetitions
       ...entry,
     };
   })
-  // Generics: Array<Competition & UserCompetition> menandai hasil merge sebagai
-  // gabungan detail kompetisi dan status kompetisi milik user.
-  .filter(Boolean) as Array<Competition & UserCompetition>;
+  // Generics: Array<Omit<Competition, 'status'> & UserCompetition> menandai hasil merge sebagai
+  // gabungan detail kompetisi dan status kompetisi milik user (mengabaikan status kompetisi asli).
+  .filter(Boolean) as Array<Omit<Competition, 'status'> & UserCompetition>;
 export const bookmarkedCompetitions = bookmarkedCompetitionIds
   .map((id) => {
     const competition = getCompetitionById(id);
@@ -729,6 +729,8 @@ export const adminCompetitionRows = competitions.map((competition) => ({
   location: competition.location,
   whatsappGroup: competition.whatsappGroup,
   description: competition.description,
+  featured: competition.featured,
+  recommended: competition.recommended,
 }));
 export const adminSubmissionRows = submissions;
 
