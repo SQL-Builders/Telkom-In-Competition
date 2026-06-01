@@ -1,0 +1,15 @@
+export const appPaths = {
+  home: '/',
+  login: '/login',
+  register: '/register',
+  explore: '/explore',
+  dashboard: '/dashboard',
+  myCompetitions: '/my-competitions',
+  bookmarks: '/bookmarks',
+  adminLogin: '/admin-login',
+  adminDashboard: '/admin-dashboard',
+  competition: (id: number | string) => `/competition/${id}`,
+  competitionProposal: (id: number | string) => `/competition/${id}/university-proposal`,
+  competitionRegistration: (id: number | string) => `/competition/${id}/register`,
+  competitionReview: (id: number | string) => `/competition/${id}/review-result`,
+};
