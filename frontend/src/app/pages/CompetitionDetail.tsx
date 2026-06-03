@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   ArrowLeft,
@@ -23,6 +23,22 @@ export function CompetitionDetail() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const competition = getCompetitionById(id);
 
+  const [isDark, setIsDark] = useState(
+  document.documentElement.classList.contains('dark')
+);
+
+useEffect(() => {
+  const observer = new MutationObserver(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+
+  return () => observer.disconnect();
+}, []);
   if (!competition) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -134,7 +150,7 @@ export function CompetitionDetail() {
             <div className="lg:col-span-2 space-y-8">
               <section>
                 <h2 className="text-2xl font-bold text-[#333333] mb-4">About This Competition</h2>
-                <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
+                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
                   {competition.fullDescription}
                 </div>
               </section>
@@ -186,7 +202,7 @@ export function CompetitionDetail() {
                   {competition.requirements.map((requirement) => (
                     <div key={requirement} className="flex gap-3 items-start">
                       <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{requirement}</span>
+                      <span className="text-gray-700 dark:text-gray-300">{requirement}</span>
                     </div>
                   ))}
                 </div>
@@ -194,17 +210,39 @@ export function CompetitionDetail() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 sticky top-24">
+              <div
+                className={`rounded-2xl p-6 sticky top-24 shadow-sm border ${
+                  isDark
+                    ? 'bg-[#1E293B] text-white border-gray-700'
+                    : 'bg-white text-gray-900 border-gray-200'
+                }`}
+              >
                 <div className="mb-6">
                   <div className="text-3xl font-bold text-[#C8102E] mb-2">
                     {competition.prizes[0].split(' ')[0]}
                   </div>
-                  <div className="text-gray-600">Top Prize</div>
+                  <div className="text-gray-600 dark:text-gray-300">Top Prize</div>
                 </div>
 
-                <div className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-200">
-                  <div className="text-sm font-semibold text-blue-900 mb-2">Competition Stages</div>
-                  <div className="text-xs text-blue-800 space-y-1">
+                <div
+                  className={`rounded-xl p-4 mb-4 border ${
+                    isDark
+                      ? 'bg-slate-800 border-slate-700'
+                      : 'bg-blue-50 border-blue-200'
+                     }`}
+                  >
+                  <div
+                    className={`text-sm font-semibold mb-2 ${
+                      isDark ? 'text-blue-200' : 'text-blue-900'
+                    }`}
+                  >  
+                    Competition Stages
+                  </div>                
+                  <div
+                    className={`text-xs space-y-1 ${
+                      isDark ? 'text-blue-300' : 'text-blue-800'
+                    }`}
+                  >
                     <div>1. Submit University Proposal</div>
                     <div>2. University Review (7-14 days)</div>
                     <div>3. If approved, continue to National Stage</div>
@@ -223,11 +261,11 @@ export function CompetitionDetail() {
                 <div className="space-y-3 pt-4 border-t border-gray-200">
                   <div>
                     <div className="text-sm text-gray-600 mb-1">Organizer</div>
-                    <div className="font-semibold text-[#333333]">{competition.organizer}</div>
+                    <div className="font-semibold text-[#333333] dark:text-white">{competition.organizer}</div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600 mb-1">Registration Deadline</div>
-                    <div className="font-semibold text-[#333333]">
+                    <div className="font-semibold text-[#333333] dark:text-white">
                       {new Date(competition.registrationDeadline).toLocaleDateString('en-US', {
                         month: 'long',
                         day: 'numeric',
@@ -237,14 +275,28 @@ export function CompetitionDetail() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-200">
+              <div
+                className={`rounded-2xl p-6 border shadow-sm ${
+                  isDark
+                    ? 'bg-[#1E293B] border-gray-700 text-white'
+                    : 'bg-yellow-50 border-yellow-200 text-gray-900'
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-4">
-                  <Trophy className="w-6 h-6 text-yellow-600" />
-                  <h3 className="font-bold text-[#333333]">Prizes</h3>
+                  <Trophy className="w-6 h-6 text-yellow-500" />
+                  <h3 className="font-bold">
+                    Prizes
+                  </h3>
                 </div>
+
                 <div className="space-y-2">
                   {competition.prizes.map((prize) => (
-                    <div key={prize} className="flex items-center gap-2 text-gray-700">
+                    <div
+                      key={prize}
+                      className={`flex items-center gap-2 ${
+                        isDark ? 'text-gray-300' : 'text-gray-700'
+                      }`}
+                    >
                       <div className="w-2 h-2 bg-yellow-500 rounded-full" />
                       <span>{prize}</span>
                     </div>
@@ -252,12 +304,28 @@ export function CompetitionDetail() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
-                <div className="flex items-center gap-2 mb-4">
+              <div
+                className={`rounded-2xl p-6 border shadow-sm ${
+                  isDark
+                    ? 'bg-[#1E293B] border-gray-700 text-white'
+                    : 'bg-green-50 border-green-200 text-gray-900'
+                }`}
+              >
+                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-100">
                   <MessageCircle className="w-6 h-6 text-green-600" />
-                  <h3 className="font-bold text-[#333333]">Join Our Community</h3>
+                  <h3
+                    className={`font-bold ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
+                    Join Our Community
+                  </h3>
                 </div>
-                <p className="text-sm text-gray-700 mb-4">
+                <p
+                  className={`text-sm mb-4 ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}
+                >
                   Bergabung dengan grup WhatsApp untuk update, diskusi, dan networking dengan peserta lain.
                 </p>
                 <motion.a

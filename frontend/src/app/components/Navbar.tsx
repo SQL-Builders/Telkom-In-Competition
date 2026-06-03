@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Navbar() {
 
@@ -12,9 +12,17 @@ export function Navbar() {
   const { isLoggedIn, user, logout } = useAuth();
 
   // ========================== DARK MODE ==========================
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem('theme') === 'dark'
-  );
+ const [darkMode, setDarkMode] = useState(
+  localStorage.getItem('theme') === 'dark'
+);
+
+useEffect(() => {
+  if (darkMode) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+}, [darkMode]);
 
   const toggleDarkMode = () => {
 
