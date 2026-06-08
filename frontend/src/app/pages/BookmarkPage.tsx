@@ -1,40 +1,57 @@
 import { Navbar } from '../components/Navbar';
 import { CompetitionCard } from '../components/CompetitionCard';
-import { BookMarked, Trash2 } from 'lucide-react';
+import { BookMarked, Trash2, X } from 'lucide-react';
 import { motion } from 'motion/react';
-import { bookmarkedCompetitions } from '../data/competitions';
+import { useBookmarkedCompetitions } from '../hooks/useCompetitions';
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { appPaths } from '../data/paths';
 
 export function BookmarkPage() {
-  const [items, setItems] = useState(bookmarkedCompetitions);
+  const { data: bookmarkedCompetitions, loading, removeItem, clearAll } = useBookmarkedCompetitions();
   const [category, setCategory] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
+  const navigate = useNavigate();
+
   const visibleBookmarks = useMemo(() => {
     const filtered =
       category === 'all'
-        ? items
-        : items.filter((competition) => competition.category === category);
+        ? bookmarkedCompetitions
+        : bookmarkedCompetitions.filter((c) => c.category === category);
 
-    return [...filtered].sort((first, second) => {
+    return [...filtered].sort((a, b) => {
       if (sortBy === 'deadline') {
-        return new Date(first.deadline).getTime() - new Date(second.deadline).getTime();
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
       }
-
       if (sortBy === 'name') {
-        return first.title.localeCompare(second.title);
+        const titleA = a.title || a.nama_lomba || '';
+        const titleB = b.title || b.nama_lomba || '';
+        return titleA.localeCompare(titleB);
       }
-
-      return new Date(second.bookmarkedDate).getTime() - new Date(first.bookmarkedDate).getTime();
+      // Recent: sort by bookmarkedDate desc
+      const dateA = a.bookmarkedDate ? new Date(a.bookmarkedDate).getTime() : 0;
+      const dateB = b.bookmarkedDate ? new Date(b.bookmarkedDate).getTime() : 0;
+      return dateB - dateA;
     });
-  }, [category, items, sortBy]);
-  const designCount = items.filter((competition) => ['UI/UX', 'Design'].includes(competition.category)).length;
-  const techCount = items.filter((competition) => ['IT', 'Data Science'].includes(competition.category)).length;
-  const businessCount = items.filter((competition) => competition.category === 'Business').length;
+  }, [category, bookmarkedCompetitions, sortBy]);
+
+  const designCount = bookmarkedCompetitions.filter((c) => ['UI/UX', 'Design'].includes(c.category)).length;
+  const techCount = bookmarkedCompetitions.filter((c) => ['IT', 'Data Science'].includes(c.category)).length;
+  const businessCount = bookmarkedCompetitions.filter((c) => c.category === 'Business').length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C8102E]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="p-6 lg:p-12">
+        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 bg-[#C8102E] rounded-xl flex items-center justify-center">
@@ -43,26 +60,32 @@ export function BookmarkPage() {
             <h1 className="text-4xl font-bold text-[#333333]">Bookmarks</h1>
           </div>
           <p className="text-lg text-gray-600">
-            You have {items.length} saved competitions
+            You have {bookmarkedCompetitions.length} saved competition{bookmarkedCompetitions.length !== 1 ? 's' : ''}
           </p>
         </div>
 
-        {items.length === 0 ? (
+        {bookmarkedCompetitions.length === 0 ? (
           <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-16 text-center">
             <BookMarked className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-gray-400 mb-2">No Bookmarks Yet</h3>
-            <p className="text-gray-500">
-              Start bookmarking competitions to save them for later
-            </p>
+            <p className="text-gray-500 mb-6">Start bookmarking competitions to save them for later</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(appPaths.explore)}
+              className="px-6 py-3 bg-[#C8102E] text-white font-bold rounded-xl hover:bg-[#A00D25] transition-colors"
+            >
+              Explore Competitions
+            </motion.button>
           </div>
         ) : (
           <>
-            {/* Quick Actions */}
-            <div className="flex items-center justify-between mb-6">
+            {/* Filters & Actions */}
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
               <div className="flex gap-3">
                 <select
                   value={category}
-                  onChange={(event) => setCategory(event.target.value)}
+                  onChange={(e) => setCategory(e.target.value)}
                   className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent"
                 >
                   <option value="all">All Categories</option>
@@ -74,7 +97,7 @@ export function BookmarkPage() {
                 </select>
                 <select
                   value={sortBy}
-                  onChange={(event) => setSortBy(event.target.value)}
+                  onChange={(e) => setSortBy(e.target.value)}
                   className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] focus:border-transparent"
                 >
                   <option value="recent">Sort by: Recent</option>
@@ -85,7 +108,7 @@ export function BookmarkPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setItems([])}
+                onClick={clearAll}
                 className="px-6 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
@@ -93,17 +116,37 @@ export function BookmarkPage() {
               </motion.button>
             </div>
 
-            {/* Bookmarked Competitions Grid */}
+            {/* Bookmarked Grid */}
             {visibleBookmarks.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {visibleBookmarks.map((competition) => (
-                  <div key={competition.id} className="relative">
-                    <CompetitionCard {...competition} />
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-[#C8102E] text-white text-xs font-semibold rounded-lg">
-                      Saved {new Date(competition.bookmarkedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {visibleBookmarks.map((competition) => {
+                  const compId = competition.id_lomba || competition.id;
+                  const bookmarkId = competition.bookmarkId;
+                  const savedDate = competition.bookmarkedDate
+                    ? new Date(competition.bookmarkedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : null;
+                  return (
+                    <div key={compId} className="relative group">
+                      <CompetitionCard {...competition} id={compId} title={competition.title || competition.nama_lomba} />
+                      {/* Saved date badge */}
+                      {savedDate && (
+                        <div className="absolute top-4 left-4 px-3 py-1 bg-[#C8102E] text-white text-xs font-semibold rounded-lg">
+                          Saved {savedDate}
+                        </div>
+                      )}
+                      {/* Remove button */}
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => removeItem(compId, bookmarkId)}
+                        className="absolute top-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                        title="Remove bookmark"
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </motion.button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
@@ -112,12 +155,13 @@ export function BookmarkPage() {
               </div>
             )}
 
-            {/* Collections Section */}
+            {/* Collections */}
             <div className="mt-16">
               <h2 className="text-2xl font-bold text-[#333333] mb-6">Collections</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
+                  onClick={() => setCategory('UI/UX')}
                   className="bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl p-6 text-white cursor-pointer"
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -129,6 +173,7 @@ export function BookmarkPage() {
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
+                  onClick={() => setCategory('IT')}
                   className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 text-white cursor-pointer"
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -140,6 +185,7 @@ export function BookmarkPage() {
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
+                  onClick={() => setCategory('Business')}
                   className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white cursor-pointer"
                 >
                   <div className="flex items-center justify-between mb-4">

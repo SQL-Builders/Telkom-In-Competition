@@ -1,6 +1,7 @@
 import { Calendar, Users, Bookmark, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import { useNavigate } from 'react-router';
 
 import { appPaths } from '../data/paths';
@@ -18,6 +19,8 @@ interface CompetitionCardProps {
   level: string;
   participants: number;
   image: string;
+  recommended?: boolean;
+  biaya?: number;
 }
 
 export function CompetitionCard({
@@ -29,11 +32,38 @@ export function CompetitionCard({
   level,
   participants,
   image,
+  recommended,
+  biaya,
 }: CompetitionCardProps) {
 
   const navigate = useNavigate();
 
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  // Bookmark state from localStorage
+  const [isBookmarked, setIsBookmarked] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem('telkom-in:bookmarks') || '[]') as number[];
+    return saved.includes(id);
+  });
+
+  const toggleBookmark = async (e: MouseEvent) => {
+    e.stopPropagation();
+    
+    // Optimistic UI update
+    const saved = JSON.parse(localStorage.getItem('telkom-in:bookmarks') || '[]') as number[];
+    const newSaved = isBookmarked ? saved.filter(s => s !== id) : [...saved, id];
+    localStorage.setItem('telkom-in:bookmarks', JSON.stringify(newSaved));
+    setIsBookmarked(!isBookmarked);
+
+    // Sync to backend if logged in
+    try {
+      const token = localStorage.getItem('telkom-in-competition:token') || sessionStorage.getItem('telkom-in-competition:token');
+      if (token) {
+        const { bookmarksApi } = await import('../api/bookmarksApi');
+        await bookmarksApi.toggleBookmark(id);
+      }
+    } catch (err) {
+      console.error('Failed to sync bookmark to backend', err);
+    }
+  };
 
   const deadlineLabel = formatDaysLeft(deadline);
 
@@ -67,12 +97,7 @@ export function CompetitionCard({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
 
-          onClick={(e) => {
-
-            e.stopPropagation();
-            setIsBookmarked(!isBookmarked);
-
-          }}
+          onClick={(e) => toggleBookmark(e)}
 
           className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors ${
             isBookmarked
@@ -91,21 +116,39 @@ export function CompetitionCard({
 
       </div>
 
+      {/* ========================== RECOMMENDED BADGE ========================== */}
+      {recommended && (
+        <div className="absolute top-4 left-4 z-10">
+          <div className="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
+            ⭐ Recommended
+          </div>
+        </div>
+      )}
+
       {/* ========================== IMAGE SECTION ========================== */}
       <div className="relative h-56 overflow-hidden">
 
         {/* Competition Image */}
-        <img
-          src="/assets/produk.png"
-          alt={title}
-
-          className="
-            w-full h-full
-            object-cover
-            group-hover:scale-110
-            transition-transform duration-500
-          "
-        />
+        {image ? (
+          <img
+            src={image}
+            alt={title}
+            className="
+              w-full h-full
+              object-cover
+              group-hover:scale-110
+              transition-transform duration-500
+            "
+            onError={(e) => {
+              // If image fails to load, show gradient placeholder
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+        ) : null}
+        <div className={`${image ? 'hidden' : ''} w-full h-full bg-gradient-to-br from-[#C8102E] via-[#E91E3A] to-[#FF6B6B] flex items-center justify-center group-hover:scale-110 transition-transform duration-500`}>
+          <span className="text-white text-5xl font-black opacity-30 select-none">{title.charAt(0)}</span>
+        </div>
 
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -135,16 +178,18 @@ export function CompetitionCard({
         <div className="flex items-center gap-2 mb-3">
 
           <span className="px-3 py-1 bg-[#C8102E]/10 text-[#C8102E] rounded-lg text-sm font-semibold">
-
             {category}
-
           </span>
 
-          <span className="px-3 py-1 bg-[#374151] text-[#F3F4F6] rounded-lg text-sm font-medium">
-
+          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
             {level}
-
           </span>
+
+          {biaya !== undefined && (
+            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-bold ml-auto">
+              {biaya === 0 ? 'Free' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(biaya)}
+            </span>
+          )}
 
         </div>
 
