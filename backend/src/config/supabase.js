@@ -14,11 +14,4 @@ export const supabase = createClient(env.supabaseUrl, supabaseKey, {
     persistSession: false,
   },
 });
-
-/**
- * Supabase client with anon key (respects RLS).
- * Use this only when you need RLS-aware queries.
- */
-export const supabaseAnon = createClient(env.supabaseUrl, env.supabaseAnonKey);
-
 export default supabase;

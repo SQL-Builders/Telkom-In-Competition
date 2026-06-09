@@ -1,17 +1,19 @@
 import multer from 'multer';
 import { AppError } from './errorMiddleware.js';
 
-// Configure multer for memory storage (we will upload directly from memory to Supabase)
+// ini biar file langsung disimpan di memori, bukan di disk. kalo ga salah namanya multer tapi gatau sih lupa
 const storage = multer.memoryStorage();
 
-// File filter to allow only specific types (e.g., pdf, images, archives)
+// buat filter file
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
     'application/pdf',
     'image/jpeg',
     'image/png',
     'application/zip',
-    'application/x-zip-compressed'
+    'application/x-zip-compressed',
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {

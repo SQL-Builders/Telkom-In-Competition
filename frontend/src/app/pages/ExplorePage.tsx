@@ -1,7 +1,7 @@
 import { Navbar } from '../components/Navbar';
 import { FilterBar } from '../components/FilterBar';
 import { CompetitionCard } from '../components/CompetitionCard';
-import { competitions } from '../data/competitions';
+import { useCompetitions } from '../hooks/useCompetitions';
 import { useMemo, useState } from 'react';
 
 function normalizeFilterValue(value: string) {
@@ -13,6 +13,8 @@ export function ExplorePage() {
   const [category, setCategory] = useState('all');
   const [deadline, setDeadline] = useState('all');
   const [level, setLevel] = useState('all');
+
+  const { data: competitions, loading, error } = useCompetitions();
 
   const filteredCompetitions = useMemo(() => {
     const now = new Date();
@@ -39,7 +41,7 @@ export function ExplorePage() {
 
       return matchesSearch && matchesCategory && matchesLevel && matchesDeadline;
     });
-  }, [category, deadline, level, searchTerm]);
+  }, [competitions, category, deadline, level, searchTerm]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,7 +65,16 @@ export function ExplorePage() {
           </p>
         </div>
 
-        {filteredCompetitions.length > 0 ? (
+        {error ? (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-8 rounded-2xl text-center mb-8">
+            <h2 className="text-xl font-bold mb-2">Error Fetching Competitions</h2>
+            <p>{error.message}</p>
+          </div>
+        ) : loading ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C8102E]"></div>
+          </div>
+        ) : filteredCompetitions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCompetitions.map((competition) => (
               <CompetitionCard key={competition.id} {...competition} />
@@ -76,7 +87,7 @@ export function ExplorePage() {
           </div>
         )}
 
-        {filteredCompetitions.length === competitions.length && (
+        {!loading && filteredCompetitions.length === competitions.length && competitions.length > 0 && (
           <div className="mt-12 text-center">
             <button className="px-8 py-4 bg-[#C8102E] text-white font-bold text-lg rounded-xl hover:bg-[#A00D25] transition-colors shadow-lg hover:shadow-xl">
               Load More Competitions
