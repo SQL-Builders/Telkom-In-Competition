@@ -17,14 +17,48 @@ router.get(
   competitionController.getAllCompetitions
 );
 router.get('/categories', competitionController.getAllCategories);
+
+// ── Registration: specific paths MUST come BEFORE /:id ─────
 router.get(
   '/registrations/me',
   authenticate,
   competitionController.getMyRegistrations
 );
+router.get(
+  '/registrations/all',
+  authenticate,
+  authorize('admin'),
+  competitionController.getAllRegistrations
+);
+router.patch(
+  '/registrations/:id/status',
+  authenticate,
+  authorize('admin'),
+  competitionController.updateRegistrantStatus
+);
+router.patch(
+  '/registrations/:id/stage',
+  authenticate,
+  authorize('admin'),
+  competitionController.updateRegistrantStage
+);
+router.delete(
+  '/registrations/:id',
+  authenticate,
+  authorize('admin'),
+  competitionController.deleteRegistration
+);
+router.post(
+  '/registrations',
+  authenticate,
+  authorize('admin'),
+  competitionController.createRegistrationAdmin
+);
+
+// ── Single competition (after all /registrations/* routes) ──
 router.get('/:id', competitionController.getCompetitionById);
 
-// ── Protected Routes ───────────────────────────────────────
+// ── Protected Competition CRUD ─────────────────────────────
 router.post(
   '/',
   authenticate,
@@ -46,37 +80,19 @@ router.delete(
   competitionController.deleteCompetition
 );
 
-// ── Registration ───────────────────────────────────────────
+// ── Register for competition ───────────────────────────────
 router.post(
   '/:id/register',
   authenticate,
   competitionController.registerForCompetition
 );
 
-// ── Admin Registrant Management ─────────────────────────
+// ── Per-competition registrants (admin) ───────────────────
 router.get(
   '/:id/registrants',
   authenticate,
   authorize('admin'),
   competitionController.getRegistrants
-);
-router.patch(
-  '/registrations/:id/status',
-  authenticate,
-  authorize('admin'),
-  competitionController.updateRegistrantStatus
-);
-router.patch(
-  '/registrations/:id/winner',
-  authenticate,
-  authorize('admin'),
-  competitionController.markWinner
-);
-router.delete(
-  '/registrations/:id',
-  authenticate,
-  authorize('admin'),
-  competitionController.deleteRegistration
 );
 
 // ── Categories (admin) ────────────────────────────────────

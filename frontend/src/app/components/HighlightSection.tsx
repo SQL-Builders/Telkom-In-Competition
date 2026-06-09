@@ -25,11 +25,18 @@ export function HighlightSection() {
               whileHover={{ scale: 1.05 }}
               className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${highlight.color} opacity-90 group-hover:opacity-100 transition-opacity`} />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+              {highlight.image && (
+                <img
+                  src={highlight.image}
+                  alt={highlight.title}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+              )}
+              <div className={`absolute inset-0 bg-gradient-to-br ${highlight.color} opacity-80 group-hover:opacity-90 transition-opacity`} />
+              <div className="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors" />
 
               <div className="relative h-full flex items-end p-6">
-                <h3 className="text-white font-bold text-lg leading-tight">
+                <h3 className="text-white font-bold text-lg leading-tight drop-shadow-md">
                   {highlight.title}
                 </h3>
               </div>

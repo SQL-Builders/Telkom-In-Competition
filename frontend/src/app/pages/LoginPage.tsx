@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { appPaths } from '../data/paths';
+import { authApi } from '../api/authApi';
 
 
 /* ─── Keyframes injected once ─── */
@@ -207,11 +208,12 @@ export function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData]         = useState({ email: '', password: '' });
-  const [errors, setErrors]             = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors]             = useState<{ email?: string; password?: string; form?: string }>({});
+  const [isLoading, setIsLoading]       = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string; form?: string } = {};
 
     if (!formData.email)
       newErrors.email = 'Email is required';
@@ -225,15 +227,17 @@ export function LoginPage() {
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
-    // Simulate login (in real app, call API here)
-    login({
-      id: Date.now(),
-      name: formData.email.split('@')[0],
-      email: formData.email,
-      role: 'user',
-    });
-    const from = (location.state as any)?.from?.pathname || appPaths.dashboard;
-    navigate(from, { replace: true });
+    setIsLoading(true);
+    try {
+      const res = await authApi.login(formData.email, formData.password);
+      login(res.user, res.accessToken);
+      const from = (location.state as any)?.from?.pathname || appPaths.dashboard;
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setErrors({ form: err.response?.data?.message || 'Invalid email or password' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /* shared input class */
@@ -305,7 +309,11 @@ export function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-
+            {errors.form && (
+              <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
+                {errors.form}
+              </div>
+            )}
             {/* Email */}
             <div>
               <label className="block text-xs font-semibold text-white/50 mb-2 tracking-widest uppercase">
@@ -366,9 +374,13 @@ export function LoginPage() {
                 />
                 <span className="text-sm text-white/40">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-[#C8102E] hover:underline font-semibold">
+              <button
+                type="button"
+                onClick={() => navigate(appPaths.forgotPassword)}
+                className="text-sm text-[#C8102E] hover:underline font-semibold"
+              >
                 Forgot Password?
-              </a>
+              </button>
             </div>
 
             {/* Submit */}
@@ -376,10 +388,17 @@ export function LoginPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               type="submit"
-              className="w-full py-3.5 bg-[#C8102E] text-white font-bold rounded-xl hover:bg-[#A00D25] transition-colors mt-2"
+              disabled={isLoading}
+              className={`w-full py-3.5 bg-[#C8102E] text-white font-bold rounded-xl transition-colors mt-2 flex justify-center items-center ${
+                isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#A00D25]'
+              }`}
               style={{ boxShadow: '0 4px 20px rgba(200,16,46,0.35)' }}
             >
-              Login
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                'Login'
+              )}
             </motion.button>
           </form>
 

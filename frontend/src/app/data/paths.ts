@@ -2,6 +2,7 @@ export const appPaths = {
   home: '/',
   login: '/login',
   register: '/register',
+  forgotPassword: '/forgot-password',
   explore: '/explore',
   dashboard: '/dashboard',
   myCompetitions: '/my-competitions',
@@ -9,7 +10,7 @@ export const appPaths = {
   adminLogin: '/admin-login',
   adminDashboard: '/admin-dashboard',
   competition: (id: number | string) => `/competition/${id}`,
-  competitionProposal: (id: number | string) => `/competition/${id}/university-proposal`,
+  competitionProposal: (id: number | string) => `/competition/${id}/submit-proposal`,
   competitionRegistration: (id: number | string) => `/competition/${id}/register`,
   competitionReview: (id: number | string) => `/competition/${id}/review-result`,
 };

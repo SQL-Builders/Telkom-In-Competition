@@ -32,7 +32,8 @@ const uploadController = {
         throw new AppError('No file provided.', 400);
       }
 
-      const berkasRecord = await uploadService.uploadFile(req.file, req.user.id_user);
+      const prefix = req.body.prefix || '';
+      const berkasRecord = await uploadService.uploadFile(req.file, req.user.id_user, prefix);
 
       return successResponse(
         res,

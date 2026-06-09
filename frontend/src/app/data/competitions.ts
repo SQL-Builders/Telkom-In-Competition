@@ -593,6 +593,7 @@ export const competitionHighlights = competitions.slice(0, 8).map((competition) 
   id: competition.id,
   title: competition.shortTitle,
   color: competition.highlightColor,
+  image: competition.image,
 }));
 export const myCompetitions = userCompetitions
   .map((entry) => {
@@ -667,7 +668,7 @@ export function competitionPath(id: number | string) {
 }
 
 export function universityProposalPath(id: number | string) {
-  return `/competition/${id}/university-proposal`;
+  return `/competition/${id}/submit-proposal`;
 }
 
 export function nationalRegistrationPath(id: number | string) {

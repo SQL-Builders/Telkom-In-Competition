@@ -26,31 +26,37 @@ export const createCompetitionSchema = z.object({
     .optional(),
   deadline: z.string().datetime({ offset: true }).optional(),
   status: z.enum(['active', 'inactive', 'upcoming', 'completed']).default('active'),
-  is_document_required: z.boolean().default(false),
-  max_document_size_mb: z.number().int().positive().default(10),
-  allowed_document_formats: z.string().default('.pdf,.zip,.png,.jpg,.jpeg'),
   poster_url: z.string().url().optional(),
+  level: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  whatsapp_group: z.string().nullable().optional().or(z.literal('')),
+  whatsappGroup: z.string().nullable().optional().or(z.literal('')),
+  requirements: z.array(z.string()).nullable().optional(),
+  timeline: z.array(z.object({
+    date: z.string().optional(),
+    event: z.string().optional(),
+    stage: z.string().optional()
+  })).nullable().optional(),
+  proposalFields: z.array(z.object({
+    label: z.string(),
+    type: z.string(),
+    required: z.boolean().optional(),
+    options: z.array(z.string()).optional(),
+    allowedFormats: z.array(z.string()).optional()
+  })).nullable().optional(),
+  proposal_fields: z.array(z.object({
+    label: z.string(),
+    type: z.string(),
+    required: z.boolean().optional(),
+    options: z.array(z.string()).optional(),
+    allowedFormats: z.array(z.string()).optional()
+  })).nullable().optional(),
 });
 
 /**
  * Schema: Update competition
  */
 export const updateCompetitionSchema = createCompetitionSchema.partial();
-
-/**
- * Schema: Competition registration
- */
-export const registerCompetitionSchema = z.object({
-  id_lomba: z
-    .number({ required_error: 'Competition ID is required.' })
-    .int()
-    .positive(),
-  data_berkas_id_data_berkas: z
-    .number()
-    .int()
-    .positive()
-    .optional(),
-});
 
 /**
  * Schema: Query parameters for listing competitions

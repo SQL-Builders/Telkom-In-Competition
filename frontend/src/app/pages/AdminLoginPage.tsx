@@ -1,25 +1,28 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Shield, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { appPaths } from '../data/paths';
+import { authApi } from '../api/authApi';
 
 // Note: This is a simplified admin login page for demonstration purposes. In a real application, you would want to implement proper authentication and security measures.s
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string; form?: string } = {};
 
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -38,18 +41,31 @@ export function AdminLoginPage() {
       return;
     }
 
-    // Login as admin generic (in real app, call API here and validate credentials)
-    login({
-      id: Date.now(),
-      name: 'Admin Telkom',
-      email: formData.email,
-      role: 'admin',
-    });
-    navigate(appPaths.adminDashboard);
+    setIsLoading(true);
+    try {
+      const res = await authApi.login(formData.email, formData.password);
+      if (res.user.role !== 'admin') {
+        setErrors({ form: 'You do not have admin privileges' });
+        return;
+      }
+      login(res.user, res.accessToken);
+      const from = (location.state as any)?.from?.pathname || appPaths.adminDashboard;
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setErrors({ form: err.response?.data?.message || 'Invalid admin credentials' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-[#C8102E] flex items-center justify-center p-6">
+      <style>{`
+        @keyframes glowPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0); }
+          50% { box-shadow: 0 0 0 8px rgba(200, 16, 46, 0.2); }
+        }
+      `}</style>
       <div className="w-full max-w-md">
         <button
           onClick={() => navigate(appPaths.home)}
@@ -65,20 +81,17 @@ export function AdminLoginPage() {
           className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8"
         >
           <div className="flex items-center justify-center gap-3 mb-8">
-            {/* <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-              <Shield className="w-7 h-7 text-[#C8102E]" />
-            </div> */}
             <div
               className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
               style={{ 
                 animation: 'glowPulse 3s ease-in-out infinite',
-                background: 'rgba(255,255,255,0.05)' // Opsional: beri sedikit background agar terlihat rapi
+                background: 'rgba(255,255,255,0.05)'
               }}
             >
               <img
                 src="/assets/telyuuu.png"
                 alt="Logo"
-                className="w-full h-full object-contain p-1" // object-contain agar logo tidak terpotong, p-1 agar ada jarak ke tepi
+                className="w-full h-full object-contain p-1"
               />
             </div>
             <span className="text-2xl font-bold text-white">
@@ -91,20 +104,25 @@ export function AdminLoginPage() {
             <p className="text-white/70">Login sebagai Admin Telkom University</p>
           </div>
 
-          {/* Info Box */}
           <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-4 mb-6">
             <p className="text-sm text-yellow-100 text-center">
               🔒 Area khusus admin kampus untuk mengelola lomba
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {errors.form && (
+              <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg text-center mb-4">
+                {errors.form}
+              </div>
+            )}
+            
             <div>
               <label className="block text-sm font-semibold text-white mb-2">
                 Email Admin
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10 pointer-events-none" />
                 <input
                   type="email"
                   value={formData.email}
@@ -130,7 +148,7 @@ export function AdminLoginPage() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
@@ -160,11 +178,19 @@ export function AdminLoginPage() {
 
             <motion.button
               whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.97 }}
               type="submit"
-              className="w-full py-4 bg-white text-[#C8102E] font-bold rounded-xl hover:bg-gray-100 transition-colors shadow-lg"
+              disabled={isLoading}
+              className={`w-full py-3.5 bg-gradient-to-r from-slate-800 to-slate-900 text-white font-bold rounded-xl transition-colors mt-2 flex justify-center items-center ${
+                isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:from-slate-700 hover:to-slate-800'
+              }`}
+              style={{ boxShadow: '0 4px 20px rgba(15, 23, 42, 0.25)' }}
             >
-              Login as Admin
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                'Access Dashboard'
+              )}
             </motion.button>
           </form>
 

@@ -36,15 +36,6 @@ const tokenManager = {
   verifyToken(token) {
     return jwt.verify(token, env.jwtSecret);
   },
-
-  /**
-   * Decode a token without verification (useful for debugging).
-   * @param {string} token
-   * @returns {object|null}
-   */
-  decodeToken(token) {
-    return jwt.decode(token);
-  },
 };
 
 export default tokenManager;
