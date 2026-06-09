@@ -667,7 +667,7 @@ export function competitionPath(id: number | string) {
 }
 
 export function universityProposalPath(id: number | string) {
-  return `/competition/${id}/university-proposal`;
+  return `/competition/${id}/submit-proposal`;
 }
 
 export function nationalRegistrationPath(id: number | string) {
