@@ -33,7 +33,7 @@ const competitionController = {
    *         name: status
    *         schema:
    *           type: string
-   *           enum: [active, inactive, upcoming, completed]
+   *           enum: [draft, active, completed]
    *       - in: query
    *         name: search
    *         schema:
@@ -133,7 +133,7 @@ const competitionController = {
    *                 format: date-time
    *               status:
    *                 type: string
-   *                 enum: [active, inactive, upcoming, completed]
+   *                 enum: [draft, active, completed]
    *     responses:
    *       201:
    *         description: Competition created
@@ -253,9 +253,9 @@ const competitionController = {
    *         application/json:
    *           schema:
    *             type: object
-   *             required: [data_berkas_id_data_berkas]
+   *             required: [id_berkas]
    *             properties:
-   *               data_berkas_id_data_berkas:
+   *               id_berkas:
    *                 type: integer
    *     responses:
    *       201:
@@ -270,7 +270,8 @@ const competitionController = {
         req.user.id_user,
         {
           id_lomba: competitionId,
-          data_berkas_id_data_berkas: req.body.data_berkas_id_data_berkas,
+          id_berkas: req.body.id_berkas,
+          form_data: req.body.form_data,
         }
       );
       return createdResponse(
@@ -374,14 +375,13 @@ const competitionController = {
 
       // Support CSV export if requested
       if (req.query.format === 'csv') {
-        let csvContent = 'Registration ID,User Name,User Email,Status,Winner,Date\n';
+        let csvContent = 'Registration ID,User Name,User Email,Status,Date\n';
         registrants.forEach(reg => {
           const name = reg.user_pengguna?.name || '';
           const email = reg.user_pengguna?.email || '';
           const status = reg.status_pendaftaran;
-          const isWinner = reg.is_winner ? 'Yes' : 'No';
           const date = new Date(reg.tgl_daftar).toLocaleDateString();
-          csvContent += `"${reg.nomor_pendaftaran}","${name}","${email}","${status}","${isWinner}","${date}"\n`;
+          csvContent += `"${reg.nomor_pendaftaran}","${name}","${email}","${status}","${date}"\n`;
         });
         
         res.setHeader('Content-Type', 'text/csv');
@@ -390,6 +390,15 @@ const competitionController = {
       }
 
       return successResponse(res, 'Registrants retrieved successfully.', registrants);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getAllRegistrations(req, res, next) {
+    try {
+      const registrations = await competitionService.getAllRegistrations();
+      return successResponse(res, 'All registrations retrieved successfully.', registrations);
     } catch (error) {
       next(error);
     }
@@ -405,15 +414,26 @@ const competitionController = {
     }
   },
 
-  async markWinner(req, res, next) {
+  async updateRegistrantStage(req, res, next) {
     try {
       const registrationId = parseInt(req.params.id, 10);
-      const updated = await competitionService.markWinner(registrationId, req.body.is_winner);
-      return successResponse(res, 'Winner status updated.', updated);
+      const updated = await competitionService.updateRegistrantStage(registrationId, req.body.stage);
+      return successResponse(res, 'Stage updated successfully.', updated);
     } catch (error) {
       next(error);
     }
   },
+
+  async createRegistrationAdmin(req, res, next) {
+    try {
+      const registration = await competitionService.createRegistrationAdmin(req.body);
+      return successResponse(res, 'Registration created successfully.', registration, 201);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+
 
   async deleteRegistration(req, res, next) {
     try {

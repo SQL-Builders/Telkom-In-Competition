@@ -47,7 +47,7 @@ const bookmarkService = {
    * @returns {object} { bookmarked, bookmark? }
    */
   async toggleBookmark(userId, competitionId) {
-    // Check if bookmark already exists
+    // ngecek bookmark ada atau g
     const { data: existing, error: findError } = await supabase
       .from('lomba_favorit')
       .select('id_lomba_favorit, favorit')
@@ -56,13 +56,13 @@ const bookmarkService = {
       .single();
 
     if (findError && findError.code !== 'PGRST116') {
-      // PGRST116 = "no rows returned" — that's fine, means no existing bookmark
+      // PGRST116 = "no rows returned" brrti bookmark blm ada
       logger.error('Find bookmark error:', findError);
       throw new AppError('Failed to process bookmark.', 500);
     }
 
     if (existing) {
-      // Toggle: flip favorit between 1 and 0
+      // kalo udh ada, toggle favoritnya
       const newFavorit = existing.favorit === 1 ? 0 : 1;
 
       const { data: updated, error: updateError } = await supabase
@@ -83,7 +83,7 @@ const bookmarkService = {
       };
     }
 
-    // Create new bookmark
+    // buat bookmark baru
     const { data: newBookmark, error: createError } = await supabase
       .from('lomba_favorit')
       .insert({

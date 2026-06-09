@@ -8,14 +8,18 @@ const uploadService = {
    * Upload a file to Supabase Storage and create a record in data_berkas.
    * @param {Object} file - The file object from multer
    * @param {number} userId - The ID of the user uploading the file
+   * @param {string} [prefix] - Optional prefix for the filename (e.g. CompetitionName_ParticipantName)
    * @returns {Object} The created data_berkas record
    */
-  async uploadFile(file, userId) {
+  async uploadFile(file, userId, prefix = '') {
     try {
       // 1. Generate unique file name
       const fileExt = file.originalname.split('.').pop();
-      const uniqueSuffix = crypto.randomBytes(8).toString('hex');
-      const fileName = `${userId}-${Date.now()}-${uniqueSuffix}.${fileExt}`;
+      const uniqueSuffix = crypto.randomBytes(4).toString('hex');
+      
+      // Clean up prefix (remove spaces and special chars, replace with dash)
+      const cleanPrefix = prefix ? prefix.replace(/[^a-zA-Z0-9]/g, '-') + '-' : '';
+      const fileName = `${cleanPrefix}${userId}-${Date.now()}-${uniqueSuffix}.${fileExt}`;
 
       // 2. Upload to Supabase Storage (Bucket: 'competition-files')
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -37,7 +41,7 @@ const uploadService = {
 
       const publicUrl = publicUrlData.publicUrl;
 
-      // 4. Create record in data_berkas
+      // 4. Create record in data_berkas (only columns that exist in clean schema)
       const { data: berkasRecord, error: dbError } = await supabase
         .from('data_berkas')
         .insert({
