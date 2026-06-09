@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Trophy, Calendar, TrendingUp, Clock, ArrowRight, Flame } from 'lucide-react';
 import { CompetitionCard } from '../components/CompetitionCard';
 import { useNavigate } from 'react-router';
-import { competitions, myCompetitions, recommendedCompetitions } from '../data/competitions';
+import { useCompetitions, useMyCompetitions, useRecommendedCompetitions } from '../hooks/useCompetitions';
 import { appPaths } from '../data/paths';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,6 +11,20 @@ export function UserDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const today = new Date();
+  const { data: competitions, loading: loadingAll } = useCompetitions();
+  const { data: myCompetitions, loading: loadingMy } = useMyCompetitions();
+  const { data: recommendedCompetitions, loading: loadingRec } = useRecommendedCompetitions();
+  
+  const loading = loadingAll || loadingMy || loadingRec;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C8102E]"></div>
+      </div>
+    );
+  }
+
   const upcomingCompetitions = competitions.filter(
     (competition) => new Date(competition.deadline).getTime() >= today.getTime(),
   );

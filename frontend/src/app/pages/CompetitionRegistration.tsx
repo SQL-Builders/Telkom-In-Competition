@@ -1,17 +1,19 @@
 import { Navbar } from '../components/Navbar';
 import { motion } from 'motion/react';
-import { Upload, File, X, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router';
 import { useState } from 'react';
-import { getCompetitionById } from '../data/competitions';
+import { useCompetition } from '../hooks/useCompetitions';
+import { competitionsApi } from '../api/competitionsApi';
 import { appPaths } from '../data/paths';
 
 export function CompetitionRegistration() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const competition = getCompetitionById(id);
+  const { competition, loading } = useCompetition(id);
   const [files, setFiles] = useState<Array<{ name: string; size: number; type: string }>>([]);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     teamName: '',
     teamMembers: '',
@@ -37,13 +39,30 @@ export function CompetitionRegistration() {
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!id) return;
     setStatus('uploading');
+    setErrorMessage('');
 
-    setTimeout(() => {
+    try {
+      // In a real app with file upload, you'd use FormData here.
+      // Since the API expects JSON for now, we'll send the metadata.
+      await competitionsApi.register(id, {
+        teamName: formData.teamName,
+        teamMembers: formData.teamMembers,
+        institution: formData.institution,
+        contactEmail: formData.contactEmail,
+        phoneNumber: formData.phoneNumber,
+        projectTitle: formData.projectTitle,
+        projectDescription: formData.projectDescription,
+      });
       setStatus('success');
-    }, 2000);
+    } catch (err: any) {
+      console.error(err);
+      setStatus('error');
+      setErrorMessage(err.response?.data?.message || 'Failed to submit registration');
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -51,6 +70,14 @@ export function CompetitionRegistration() {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C8102E]"></div>
+      </div>
+    );
+  }
 
   if (!competition) {
     return (
@@ -128,6 +155,11 @@ export function CompetitionRegistration() {
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
+              {status === 'error' && (
+                <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-200 text-center font-medium">
+                  {errorMessage}
+                </div>
+              )}
               {/* Team Information */}
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-[#333333]">Team Information</h2>
@@ -268,7 +300,7 @@ export function CompetitionRegistration() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-[#C8102E] rounded-lg flex items-center justify-center">
-                            <File className="w-5 h-5 text-white" />
+                            <FileText className="w-5 h-5 text-white" />
                           </div>
                           <div>
                             <div className="font-semibold text-[#333333]">{file.name}</div>

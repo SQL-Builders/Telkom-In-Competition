@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   isAdmin: boolean;
-  login: (userData: User) => void;
+  login: (userData: User, token?: string) => void;
   logout: () => void;
 }
 
@@ -21,6 +21,7 @@ interface AuthContextType {
 //
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = "telkom-in-competition:user";
+const AUTH_TOKEN_KEY = "telkom-in-competition:token";
 
 export function AuthProvider({ children }: { children: ReactNode }) { // Teknik State Management diterapkan menggunakan React's useState
   const [user, setUser] = useState<User | null>(() => {
@@ -40,13 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) { // Teknik 
   const isAdmin = user?.role === "admin";
 
   // Teknik Authentication diterapkan dengan menyediakan fungsi login dan logout
-  const login = (userData: User) => {
+  const login = (userData: User, token?: string) => {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+    }
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     setUser(null);
   };
 

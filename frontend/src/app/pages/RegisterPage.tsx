@@ -4,6 +4,7 @@ import { Trophy, Mail, Lock, User, Eye, EyeOff, ArrowLeft, Building } from 'luci
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { appPaths } from '../data/paths';
+import { authApi } from '../api/authApi';
 
 /* ─── Keyframes (same as LoginPage) ─── */
 const STYLES = `
@@ -159,13 +160,14 @@ export function RegisterPage() {
     fullName: '', email: '', university: '', password: '', confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const set = (key: string, val: string) => {
     setFormData(p => ({ ...p, [key]: val }));
-    setErrors(p => ({ ...p, [key]: undefined as any }));
+    setErrors(p => ({ ...p, [key]: undefined as any, form: undefined as any }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const err: Record<string, string> = {};
 
@@ -174,17 +176,29 @@ export function RegisterPage() {
     else if (!/\S+@\S+\.\S+/.test(formData.email)) err.email = 'Email is invalid';
     if (!formData.university) err.university = 'University is required';
     if (!formData.password) err.password = 'Password is required';
-    else if (formData.password.length < 6) err.password = 'Password must be at least 6 characters';
+    else if (formData.password.length < 8) err.password = 'Password must be at least 8 characters';
     if (formData.password !== formData.confirmPassword) err.confirmPassword = 'Passwords do not match';
 
     if (Object.keys(err).length > 0) { setErrors(err); return; }
-    login({
-      id: Date.now(),
-      name: formData.fullName,
-      email: formData.email,
-      role: 'user',
-    });
-    navigate(appPaths.dashboard);
+    
+    setIsLoading(true);
+    try {
+      const res = await authApi.register({
+        name: formData.fullName.split(' ')[0], // simplification for username
+        nama_lengkap: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: 'user'
+      });
+      
+      // Auto login after successful registration
+      login(res.user, res.accessToken);
+      navigate(appPaths.dashboard);
+    } catch (error: any) {
+      setErrors({ form: error.response?.data?.message || 'Failed to register. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /* shared input class helper */
@@ -309,6 +323,11 @@ export function RegisterPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {errors.form && (
+              <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg text-center mb-4">
+                {errors.form}
+              </div>
+            )}
             {fields.map(f => (
               <div key={f.key}>
                 <label className="block text-xs font-semibold text-white/50 mb-2 tracking-widest uppercase">
@@ -336,10 +355,17 @@ export function RegisterPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               type="submit"
-              className="w-full py-3.5 bg-[#C8102E] text-white font-bold rounded-xl hover:bg-[#A00D25] transition-colors mt-2"
+              disabled={isLoading}
+              className={`w-full py-3.5 bg-[#C8102E] text-white font-bold rounded-xl transition-colors mt-2 flex justify-center items-center ${
+                isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#A00D25]'
+              }`}
               style={{ boxShadow: '0 4px 20px rgba(200,16,46,.35)' }}
             >
-              Create Account
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                'Create Account'
+              )}
             </motion.button>
           </form>
 
