@@ -593,6 +593,7 @@ export const competitionHighlights = competitions.slice(0, 8).map((competition) 
   id: competition.id,
   title: competition.shortTitle,
   color: competition.highlightColor,
+  image: competition.image,
 }));
 export const myCompetitions = userCompetitions
   .map((entry) => {

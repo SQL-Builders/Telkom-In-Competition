@@ -233,8 +233,8 @@ export function CompetitionDetail() {
                             <span
                               className={`px-2 py-0.5 rounded text-xs font-semibold ${
                                 item.stage === 'University'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'bg-red-100 text-red-700'
+                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                               }`}
                             >
                               {item.stage}
@@ -286,9 +286,9 @@ export function CompetitionDetail() {
                   {hadiah && <div className="text-gray-700 mt-1 text-sm">{hadiah}</div>}
                 </div>
 
-                <div className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-200">
-                  <div className="text-sm font-semibold text-blue-900 mb-2">Competition Stages</div>
-                  <div className="text-xs text-blue-800 space-y-1">
+                <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-4 mb-4 border border-blue-200 dark:border-blue-900/30">
+                  <div className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">Competition Stages</div>
+                  <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
                     <div>1. Submit Proposal</div>
                     <div>2. University Review (7-14 days)</div>
                     <div>3. If approved, continue to National Stage</div>
@@ -338,14 +338,14 @@ export function CompetitionDetail() {
 
               {/* Prizes */}
               {hadiah && (
-                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-200">
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-2xl p-6 border border-yellow-200 dark:border-amber-900/30">
                   <div className="flex items-center gap-2 mb-4">
-                    <Trophy className="w-6 h-6 text-yellow-600" />
+                    <Trophy className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                     <h3 className="font-bold text-[#333333]">Hadiah</h3>
                   </div>
                   <div className="space-y-2">
                     {hadiah.split(',').map((prize: string, i: number) => (
-                      <div key={i} className="flex items-center gap-2 text-gray-700">
+                      <div key={i} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0" />
                         <span>{prize.trim()}</span>
                       </div>
@@ -356,12 +356,12 @@ export function CompetitionDetail() {
 
               {/* WhatsApp Group */}
               {competition.whatsappGroup && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-2xl p-6 border border-green-200 dark:border-green-900/30">
                   <div className="flex items-center gap-2 mb-4">
-                    <MessageCircle className="w-6 h-6 text-green-600" />
+                    <MessageCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                     <h3 className="font-bold text-[#333333]">Join Our Community</h3>
                   </div>
-                  <p className="text-sm text-gray-700 mb-4">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
                     Bergabung dengan grup WhatsApp untuk update, diskusi, dan networking dengan peserta lain.
                   </p>
                   <motion.a
@@ -370,7 +370,7 @@ export function CompetitionDetail() {
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2 shadow-md"
+                    className="w-full py-3 bg-green-500 dark:bg-green-600 text-white font-bold rounded-xl hover:bg-green-600 dark:hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
                     <MessageCircle className="w-5 h-5" />
                     Join WhatsApp Group

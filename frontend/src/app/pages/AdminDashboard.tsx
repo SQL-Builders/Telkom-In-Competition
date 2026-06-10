@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Trophy, LayoutDashboard, FolderKanban, Users, FileCheck,
-  Plus, Edit, Trash2, Eye, CheckCircle, XCircle, Menu, X as CloseIcon, Search, MessageCircle, LogOut, Calendar, MapPin, DollarSign, AlertCircle, FileText
+  Plus, Edit, Trash2, Eye, CheckCircle, XCircle, Menu, X as CloseIcon, Search, MessageCircle, LogOut, Calendar, MapPin, DollarSign, AlertCircle, FileText, Sun, Moon
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { appPaths } from '../data/paths';
 import { competitionsApi } from '../api/competitionsApi';
 import { apiClient } from '../api/client';
@@ -18,18 +19,19 @@ const adminNavigation = [
 ];
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-700',
-  completed: 'bg-gray-100 text-gray-700',
-  draft: 'bg-yellow-100 text-yellow-700',
-  pending: 'bg-orange-100 text-orange-700',
-  approved: 'bg-green-100 text-green-700',
-  rejected: 'bg-red-100 text-red-700',
-  inactive: 'bg-gray-100 text-gray-700',
+  active: 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400',
+  completed: 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-400',
+  draft: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400',
+  pending: 'bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400',
+  approved: 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400',
+  rejected: 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400',
+  inactive: 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-400',
 };
 
 export function AdminDashboard() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -73,7 +75,7 @@ export function AdminDashboard() {
   const [editingCompetition, setEditingCompetition] = useState(null);
   const [viewingSubmission, setViewingSubmission] = useState<any>(null);
   const [editingSubmission, setEditingSubmission] = useState<any>(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: number } | null>(null);
   const [submissionForm, setSubmissionForm] = useState({
     id_lomba: '' as string | number,
     status_pendaftaran: 'pending',
@@ -85,6 +87,8 @@ export function AdminDashboard() {
   const [competitionSearch, setCompetitionSearch] = useState('');
   const [submissionSearch, setSubmissionSearch] = useState('');
   const [participantSearch, setParticipantSearch] = useState('');
+  const [selectedCompetitionFilter, setSelectedCompetitionFilter] = useState('All');
+  const [selectedSubStatusFilter, setSelectedSubStatusFilter] = useState('All');
   
   // Form state
   const [competitionForm, setCompetitionForm] = useState({
@@ -94,6 +98,7 @@ export function AdminDashboard() {
     level: '',
     deadline: '',
     prizes: '',
+    biaya: 0,
     location: '',
     whatsappGroup: '',
     description: '',
@@ -105,7 +110,7 @@ export function AdminDashboard() {
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const [formTimeline, setFormTimeline] = useState<{date: string; event: string; stage: string}[]>([]);
   const [formRequirements, setFormRequirements] = useState<string[]>([]);
-  const [formProposalFields, setFormProposalFields] = useState<{label: string; type: string; required: boolean}[]>([]);
+  const [formProposalFields, setFormProposalFields] = useState<{label: string; type: string; required: boolean; allowedFormats?: string[]}[]>([]);
 
   // Calculate stats
   const stats = [
@@ -141,7 +146,7 @@ export function AdminDashboard() {
     setShowCompetitionModal(true);
   };
 
-  const handleEditCompetition = (comp) => {
+  const handleEditCompetition = (comp: any) => {
     setEditingCompetition(comp);
     setCompetitionForm({
       name: comp.title || comp.name || '',
@@ -317,10 +322,36 @@ export function AdminDashboard() {
 
   const filteredSubmissions = submissions.filter(s => {
     const teamName = s.team || s.registrationData?.user_pengguna?.name || s.registrationData?.nama_tim || '';
-    const compName = typeof s.competition === 'string' ? s.competition : (s.competition?.title || s.competition?.name || '');
-    return teamName.toLowerCase().includes(submissionSearch.toLowerCase()) ||
-           compName.toLowerCase().includes(submissionSearch.toLowerCase());
+    const compName = typeof s.competition === 'string' ? s.competition : (s.competition?.title || s.competition?.name || s.registrationData?.data_lomba?.nama_lomba || '');
+    const status = s.registrationData?.status_pendaftaran || s.status || 'pending';
+
+    const matchesSearch = teamName.toLowerCase().includes(submissionSearch.toLowerCase()) ||
+                          compName.toLowerCase().includes(submissionSearch.toLowerCase());
+                          
+    const matchesCompFilter = selectedCompetitionFilter === 'All' || compName === selectedCompetitionFilter;
+
+    let matchesStatusFilter = false;
+    if (selectedSubStatusFilter === 'All') {
+      matchesStatusFilter = true;
+    } else if (selectedSubStatusFilter === 'Pending') {
+      matchesStatusFilter = status.toLowerCase() === 'pending' || status.toLowerCase() === 'under_review';
+    } else if (selectedSubStatusFilter === 'Approved') {
+      matchesStatusFilter = status.toLowerCase() === 'accepted' || status.toLowerCase() === 'approved' || status.toLowerCase() === 'university-approved';
+    } else if (selectedSubStatusFilter === 'Rejected') {
+      matchesStatusFilter = status.toLowerCase() === 'rejected' || status.toLowerCase() === 'university-rejected';
+    }
+
+    return matchesSearch && matchesCompFilter && matchesStatusFilter;
   });
+
+  const uniqueSubmissionCompetitions = Array.from(
+    new Set(
+      submissions.map(s => {
+        return s.registrationData?.data_lomba?.nama_lomba || 
+               (typeof s.competition === 'string' ? s.competition : (s.competition?.title || s.competition?.name || ''));
+      }).filter(Boolean)
+    )
+  ) as string[];
 
   const filteredParticipants = participants.filter(p => {
     const pName = p.team || p.name || '';
@@ -332,25 +363,63 @@ export function AdminDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0B0F19] dark-theme-active' : 'bg-gray-50'}`}>
+      <style>{`
+        @keyframes glowPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0); }
+          50% { box-shadow: 0 0 0 8px rgba(200, 16, 46, 0.2); }
+        }
+
+        /* Dark Mode Specific Overrides for Modals & Inputs */
+        .dark-theme-active .bg-white {
+          background-color: #151F32 !important;
+          color: #ffffff !important;
+        }
+        .dark-theme-active .border-gray-200 {
+          border-color: #1e293b !important;
+        }
+        .dark-theme-active .text-gray-700 {
+          color: #cbd5e1 !important;
+        }
+        .dark-theme-active .text-gray-600 {
+          color: #94a3b8 !important;
+        }
+        .dark-theme-active .text-[#333333] {
+          color: #ffffff !important;
+        }
+        .dark-theme-active input, 
+        .dark-theme-active select, 
+        .dark-theme-active textarea {
+          background-color: #1d2b44 !important;
+          border-color: #1e293b !important;
+          color: #ffffff !important;
+        }
+        .dark-theme-active input::placeholder, 
+        .dark-theme-active textarea::placeholder {
+          color: #64748b !important;
+        }
+        .dark-theme-active select option {
+          background-color: #151F32 !important;
+          color: #ffffff !important;
+        }
+        .dark-theme-active .bg-gray-50 {
+          background-color: #1d2b44 !important;
+        }
+      `}</style>
       {/* Sidebar - Desktop */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-[#333333] text-white hidden lg:block z-40">
+      <aside className={`fixed left-0 top-0 h-full w-64 text-white hidden lg:block z-40 transition-colors duration-300 ${darkMode ? 'bg-[#0F172A] border-r border-slate-800' : 'bg-[#333333]'}`}>
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center gap-3 mb-8 cursor-pointer" onClick={() => navigate(appPaths.home)}>
-            {/* <div className="w-10 h-10 bg-[#C8102E] rounded-lg flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-white" />
-            </div> */}
              <div
-              className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+              className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center bg-white/5"
               style={{ 
-                animation: 'glowPulse 3s ease-in-out infinite',
-                background: 'rgba(255,255,255,0.05)' // Opsional: beri sedikit background agar terlihat rapi
+                animation: 'glowPulse 3s ease-in-out infinite'
               }}
             >
               <img
                 src="/assets/telyuuu.png"
                 alt="Logo"
-                className="w-full h-full object-contain p-1" // object-contain agar logo tidak terpotong, p-1 agar ada jarak ke tepi
+                className="w-full h-full object-contain p-1"
               />
             </div>
             <div>
@@ -368,8 +437,8 @@ export function AdminDashboard() {
                   onClick={() => setActiveTab(item.path)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     activeTab === item.path
-                      ? 'bg-[#C8102E] text-white'
-                      : 'text-gray-300 hover:bg-gray-700'
+                      ? 'bg-[#C8102E] text-white shadow-md shadow-[#C8102E]/25'
+                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -379,42 +448,137 @@ export function AdminDashboard() {
             })}
           </nav>
 
-          {/* Logout Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              logout();
-              navigate(appPaths.home);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-red-600/20 text-red-400 rounded-xl hover:bg-red-600/30 transition-colors mt-4"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
-          </motion.button>
+          {/* Theme Toggle & Logout */}
+          <div className="mt-auto space-y-3 pt-4 border-t border-white/10">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={toggleDarkMode}
+              className="w-full flex items-center justify-between px-4 py-3 bg-white/5 text-gray-300 rounded-xl hover:bg-white/10 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-blue-400" />}
+                <span className="font-medium">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              </div>
+              <div className={`w-10 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${darkMode ? 'bg-red-500' : 'bg-gray-600'}`}>
+                <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${darkMode ? 'translate-x-4' : 'translate-x-0'}`} />
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                logout();
+                navigate(appPaths.home);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-red-600/20 text-red-400 rounded-xl hover:bg-red-600/30 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Logout</span>
+            </motion.button>
+          </div>
         </div>
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#333333] text-white z-50 flex items-center justify-between px-6">
+      <div className={`lg:hidden fixed top-0 left-0 right-0 h-16 text-white z-50 flex items-center justify-between px-6 transition-colors duration-300 ${darkMode ? 'bg-[#0F172A] border-b border-slate-800' : 'bg-[#333333]'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#C8102E] rounded-lg flex items-center justify-center">
-            <Trophy className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-white/5">
+            <img src="/assets/telyuuu.png" alt="Logo" className="w-full h-full object-contain p-0.5" />
           </div>
           <div className="text-sm font-bold">Admin Panel</div>
         </div>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <CloseIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={toggleDarkMode} className="p-2 rounded-lg hover:bg-white/5">
+            {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-blue-400" />}
+          </button>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <CloseIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              className={`fixed top-0 bottom-0 left-0 w-64 p-6 flex flex-col z-50 ${darkMode ? 'bg-[#0F172A]' : 'bg-[#333333]'}`}
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <div 
+                  className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white/5"
+                  style={{ animation: 'glowPulse 3s ease-in-out infinite' }}
+                >
+                  <img src="/assets/telyuuu.png" alt="Logo" className="w-full h-full object-contain p-0.5" />
+                </div>
+                <div className="text-sm font-bold text-white">Admin Panel</div>
+              </div>
+
+              <nav className="space-y-2 flex-1">
+                {adminNavigation.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        setActiveTab(item.path);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white hover:bg-white/5"
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{item.name}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Theme Toggle & Logout */}
+              <div className="mt-auto space-y-3 pt-4 border-t border-white/10">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={toggleDarkMode}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-white/5 text-gray-300 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-blue-400" />}
+                    <span className="font-medium text-sm">{darkMode ? 'Light' : 'Dark'} Mode</span>
+                  </div>
+                  <div className={`w-8 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${darkMode ? 'bg-red-500' : 'bg-gray-600'}`}>
+                    <div className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-300 ${darkMode ? 'translate-x-3' : 'translate-x-0'}`} />
+                  </div>
+                </motion.button>
+
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate(appPaths.home);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-red-600/20 text-red-400 rounded-xl hover:bg-red-600/30 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">Logout</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0">
         <div className="p-6 lg:p-12">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-[#333333] mb-2">Admin Dashboard</h1>
-            <p className="text-lg text-gray-600">Manage competitions, participants, and submissions</p>
+            <h1 className={`text-4xl font-bold mb-2 transition-colors ${darkMode ? 'text-white' : 'text-[#333333]'}`}>Admin Dashboard</h1>
+            <p className={`text-lg transition-colors ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>Manage competitions, participants, and submissions</p>
           </div>
 
           {/* Stats Grid */}
@@ -425,11 +589,20 @@ export function AdminDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-6 border border-gray-200"
+                className={`rounded-2xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md ${
+                  darkMode 
+                    ? 'bg-[#151F32] border-slate-800 text-white' 
+                    : 'bg-white border-gray-200 text-[#333333]'
+                }`}
               >
-                <div className="text-3xl font-bold text-[#333333] mb-2">{stat.value}</div>
-                <div className="text-gray-600 mb-2">{stat.label}</div>
-                <div className="text-sm text-gray-500">{stat.change}</div>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="text-3xl font-extrabold tracking-tight">{stat.value}</div>
+                  <span className={`w-3 h-3 rounded-full ${stat.color} shadow-sm`}></span>
+                </div>
+                <div className={`text-sm font-medium mb-1 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>{stat.label}</div>
+                <div className={`text-xs font-semibold ${stat.change.includes('+') ? 'text-green-500' : stat.change === 'urgent' ? 'text-red-500 animate-pulse' : 'text-amber-500'}`}>
+                  {stat.change}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -437,14 +610,14 @@ export function AdminDashboard() {
           {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <h2 className="text-xl font-bold text-[#333333] mb-4">Recent Activity</h2>
+              <div className={`rounded-2xl border p-6 transition-all duration-300 ${darkMode ? 'bg-[#151F32] border-slate-800' : 'bg-white border-gray-200'}`}>
+                <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-[#333333]'}`}>Recent Activity</h2>
                 <div className="space-y-3">
                   {submissions.slice(0, 5).map((sub) => (
-                    <div key={sub.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div key={sub.id} className={`flex items-center gap-3 p-3 rounded-lg ${darkMode ? 'bg-[#1D2B44]/40 text-slate-300' : 'bg-gray-50 text-gray-700'}`}>
                       <div className="w-2 h-2 bg-[#C8102E] rounded-full"></div>
-                      <span className="text-sm text-gray-700 flex-1">
-                        New submission from {sub.team}
+                      <span className="text-sm flex-1">
+                        New submission from {sub.team || sub.registrationData?.user_pengguna?.name || 'Mahasiswa'}
                       </span>
                       <span className={`px-2 py-0.5 rounded text-xs font-semibold ${statusColors[sub.status]}`}>
                         {sub.status}
@@ -481,8 +654,8 @@ export function AdminDashboard() {
           )}
 
           {activeTab === 'competitions' && (
-            <div className="bg-white rounded-2xl border border-gray-200">
-              <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className={`rounded-2xl border transition-all duration-300 ${darkMode ? 'bg-[#151F32] border-slate-800' : 'bg-white border-gray-200'}`}>
+              <div className={`p-6 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${darkMode ? 'border-slate-800' : 'border-gray-200'}`}>
                 <div className="flex-1 relative max-w-md w-full">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -490,7 +663,9 @@ export function AdminDashboard() {
                     placeholder="Search competitions..."
                     value={competitionSearch}
                     onChange={(e) => setCompetitionSearch(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+                    className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] ${
+                      darkMode ? 'bg-[#1D2B44] border-slate-800 text-white placeholder:text-slate-400' : 'bg-gray-50 border-gray-200 text-[#333333]'
+                    }`}
                   />
                 </div>
                 <motion.button
@@ -506,32 +681,32 @@ export function AdminDashboard() {
 
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className={darkMode ? 'bg-[#1D2B44]/20' : 'bg-gray-50'}>
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Competition Name</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Category</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Level</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Participants</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Deadline</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Competition Name</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Category</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Level</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Participants</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Deadline</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Status</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className={`divide-y ${darkMode ? 'divide-slate-800' : 'divide-gray-200'}`}>
                     {filteredCompetitions.map((comp) => (
-                      <tr key={comp.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm font-medium text-[#333333]">{comp.title || comp.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{comp.category}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{comp.level}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{comp.participants}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
+                      <tr key={comp.id} className={`transition-colors ${darkMode ? 'hover:bg-[#1D2B44]/20 border-b border-slate-800/50' : 'hover:bg-gray-50'}`}>
+                        <td className={`px-6 py-4 text-sm font-medium ${darkMode ? 'text-white' : 'text-[#333333]'}`}>{comp.title || comp.name}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{comp.category}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{comp.level}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{comp.participants}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>
                           {new Date(comp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </td>
                         <td className="px-6 py-4">
                           {(() => {
                             const isExpired = comp.deadline && new Date(comp.deadline) < new Date();
                             const displayStatus = isExpired && comp.status === 'active' ? 'closed' : comp.status;
-                            const colorMap = { ...statusColors, closed: 'bg-red-100 text-red-700' };
+                            const colorMap: Record<string, string> = { ...statusColors, closed: 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400' };
                             return (
                               <span className={`px-3 py-1 rounded-lg text-sm font-semibold ${colorMap[displayStatus] || 'bg-gray-100 text-gray-700'}`}>
                                 {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
@@ -543,21 +718,21 @@ export function AdminDashboard() {
                           <div className="flex gap-2">
                             <button 
                               onClick={() => navigate(appPaths.competition(comp.id))}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className={`p-2 text-blue-500 rounded-lg transition-colors ${darkMode ? 'hover:bg-blue-950/40' : 'hover:bg-blue-50'}`}
                               title="View"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => handleEditCompetition(comp)}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              className={`p-2 text-green-500 rounded-lg transition-colors ${darkMode ? 'hover:bg-green-950/40' : 'hover:bg-green-50'}`}
                               title="Edit"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => handleDeleteCompetition(comp.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className={`p-2 text-red-500 rounded-lg transition-colors ${darkMode ? 'hover:bg-red-950/40' : 'hover:bg-red-50'}`}
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -573,35 +748,81 @@ export function AdminDashboard() {
           )}
 
           {activeTab === 'submissions' && (
-            <div className="bg-white rounded-2xl border border-gray-200">
-              <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h2 className="text-xl font-bold text-[#333333]">All Submissions</h2>
-                <div className="flex-1 relative max-w-md w-full">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search submissions..."
-                    value={submissionSearch}
-                    onChange={(e) => setSubmissionSearch(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
-                  />
+            <div className={`rounded-2xl border transition-all duration-300 ${darkMode ? 'bg-[#151F32] border-slate-800' : 'bg-white border-gray-200'}`}>
+              <div className={`p-6 border-b flex flex-col gap-4 ${darkMode ? 'border-slate-800' : 'border-gray-200'}`}>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-[#333333]'}`}>All Submissions</h2>
+                  <div className="flex-1 relative max-w-md w-full">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search submissions..."
+                      value={submissionSearch}
+                      onChange={(e) => setSubmissionSearch(e.target.value)}
+                      className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] ${
+                        darkMode ? 'bg-[#1D2B44] border-slate-800 text-white placeholder:text-slate-400' : 'bg-gray-50 border-gray-200 text-[#333333]'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Submissions advanced filter dropdown & status selectors */}
+                <div className={`flex flex-col lg:flex-row gap-4 pt-2 border-t ${darkMode ? 'border-slate-800/40' : 'border-gray-100'}`}>
+                  <div className="flex-1">
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                      Filter by Competition
+                    </label>
+                    <select
+                      value={selectedCompetitionFilter}
+                      onChange={(e) => setSelectedCompetitionFilter(e.target.value)}
+                      className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] ${
+                        darkMode ? 'bg-[#1D2B44] text-white border-slate-850' : 'bg-gray-50 border border-gray-200 text-[#333333]'
+                      }`}
+                    >
+                      <option value="All">All Competitions</option>
+                      {uniqueSubmissionCompetitions.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                      Filter by Status
+                    </label>
+                    <div className={`flex p-1 rounded-xl border ${darkMode ? 'bg-[#1D2B44] border-slate-800' : 'bg-gray-100 border-gray-200'}`}>
+                      {['All', 'Pending', 'Approved', 'Rejected'].map(status => (
+                        <button
+                          key={status}
+                          onClick={() => setSelectedSubStatusFilter(status)}
+                          className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                            selectedSubStatusFilter === status
+                              ? 'bg-[#C8102E] text-white shadow-sm'
+                              : darkMode ? 'text-slate-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'
+                          }`}
+                        >
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className={darkMode ? 'bg-[#1D2B44]/20' : 'bg-gray-50'}>
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Pendaftar</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Competition</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">No. Pendaftaran</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Tanggal Daftar</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stage</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Pendaftar</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Competition</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>No. Pendaftaran</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Tanggal Daftar</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Status</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Stage</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className={`divide-y ${darkMode ? 'divide-slate-800' : 'divide-gray-200'}`}>
                     {filteredSubmissions.map((sub) => {
                       const name = sub.registrationData?.user_pengguna?.name || sub.team || 'N/A';
                       const compName = sub.registrationData?.data_lomba?.nama_lomba || 
@@ -611,19 +832,19 @@ export function AdminDashboard() {
                       const status = sub.registrationData?.status_pendaftaran || sub.status || 'pending';
                       const stage = sub.registrationData?.stage || sub.stage || 'University';
                       const statusColor: Record<string, string> = {
-                        pending: 'bg-yellow-100 text-yellow-700',
-                        accepted: 'bg-green-100 text-green-700',
-                        rejected: 'bg-red-100 text-red-700',
-                        under_review: 'bg-blue-100 text-blue-700',
-                        'university-approved': 'bg-green-100 text-green-700',
-                        'university-rejected': 'bg-red-100 text-red-700',
+                        pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400',
+                        accepted: 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400',
+                        rejected: 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400',
+                        under_review: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400',
+                        'university-approved': 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400',
+                        'university-rejected': 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400',
                       };
                       return (
-                        <tr key={sub.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm font-medium text-[#333333]">{name}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{compName}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500 font-mono">{noPendaftaran}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                        <tr key={sub.id} className={`transition-colors ${darkMode ? 'hover:bg-[#1D2B44]/20 border-b border-slate-800/50' : 'hover:bg-gray-50'}`}>
+                          <td className={`px-6 py-4 text-sm font-medium ${darkMode ? 'text-white' : 'text-[#333333]'}`}>{name}</td>
+                          <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{compName}</td>
+                          <td className={`px-6 py-4 text-sm font-mono ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>{noPendaftaran}</td>
+                          <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>
                             {tglDaftar ? new Date(tglDaftar).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                           </td>
                           <td className="px-6 py-4">
@@ -631,26 +852,26 @@ export function AdminDashboard() {
                               {status.replace(/-/g, ' ')}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{stage}</td>
+                          <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{stage}</td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
                               <button 
                                 onClick={() => handleViewSubmission(sub)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                className={`p-2 text-blue-500 rounded-lg transition-colors ${darkMode ? 'hover:bg-blue-950/40' : 'hover:bg-blue-50'}`}
                                 title="View Details"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button 
                                 onClick={() => handleEditSubmission(sub)}
-                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                className={`p-2 text-green-500 rounded-lg transition-colors ${darkMode ? 'hover:bg-green-950/40' : 'hover:bg-green-50'}`}
                                 title="Edit Submission"
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
                               <button 
                                 onClick={() => handleDeleteSubmission(sub.id)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                className={`p-2 text-red-500 rounded-lg transition-colors ${darkMode ? 'hover:bg-red-950/40' : 'hover:bg-red-50'}`}
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -668,9 +889,9 @@ export function AdminDashboard() {
 
 
           {activeTab === 'participants' && (
-            <div className="bg-white rounded-2xl border border-gray-200">
-              <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h2 className="text-xl font-bold text-[#333333]">All Participants ({filteredParticipants.length})</h2>
+            <div className={`rounded-2xl border transition-all duration-300 ${darkMode ? 'bg-[#151F32] border-slate-800' : 'bg-white border-gray-200'}`}>
+              <div className={`p-6 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${darkMode ? 'border-slate-800' : 'border-gray-200'}`}>
+                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-[#333333]'}`}>All Participants ({filteredParticipants.length})</h2>
                 <div className="flex-1 relative max-w-md w-full">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -678,35 +899,37 @@ export function AdminDashboard() {
                     placeholder="Search by name, email, or competition..."
                     value={participantSearch}
                     onChange={(e) => setParticipantSearch(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+                    className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C8102E] ${
+                      darkMode ? 'bg-[#1D2B44] border-slate-800 text-white placeholder:text-slate-400' : 'bg-gray-50 border-gray-200 text-[#333333]'
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className={darkMode ? 'bg-[#1D2B44]/20' : 'bg-gray-50'}>
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nama Peserta</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Kompetisi</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Tanggal Daftar</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stage</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Nama Peserta</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Email</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Kompetisi</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Tanggal Daftar</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Stage</th>
+                      <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className={`divide-y ${darkMode ? 'divide-slate-800' : 'divide-gray-200'}`}>
                     {filteredParticipants.length === 0 ? (
-                      <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">Belum ada peserta terdaftar</td></tr>
+                      <tr><td colSpan={6} className={`px-6 py-12 text-center ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>Belum ada peserta terdaftar</td></tr>
                     ) : filteredParticipants.map((p) => (
-                      <tr key={p.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm font-medium text-[#333333]">{p.team || p.name || '-'}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{p.email || '-'}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{p.competition || '-'}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
+                      <tr key={p.id} className={`transition-colors ${darkMode ? 'hover:bg-[#1D2B44]/20 border-b border-slate-800/50' : 'hover:bg-gray-50'}`}>
+                        <td className={`px-6 py-4 text-sm font-medium ${darkMode ? 'text-white' : 'text-[#333333]'}`}>{p.team || p.name || '-'}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{p.email || '-'}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{p.competition || '-'}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>
                           {p.submittedDate ? new Date(p.submittedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{p.stage || 'University'}</td>
+                        <td className={`px-6 py-4 text-sm ${darkMode ? 'text-slate-300' : 'text-gray-600'}`}>{p.stage || 'University'}</td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${statusColors[p.status] || 'bg-gray-100 text-gray-700'}`}>
                             {p.status || '-'}

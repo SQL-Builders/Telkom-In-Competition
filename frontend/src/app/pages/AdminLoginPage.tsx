@@ -60,6 +60,12 @@ export function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-[#C8102E] flex items-center justify-center p-6">
+      <style>{`
+        @keyframes glowPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(200, 16, 46, 0); }
+          50% { box-shadow: 0 0 0 8px rgba(200, 16, 46, 0.2); }
+        }
+      `}</style>
       <div className="w-full max-w-md">
         <button
           onClick={() => navigate(appPaths.home)}
@@ -116,7 +122,7 @@ export function AdminLoginPage() {
                 Email Admin
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10 pointer-events-none" />
                 <input
                   type="email"
                   value={formData.email}
@@ -142,7 +148,7 @@ export function AdminLoginPage() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
