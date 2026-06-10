@@ -111,6 +111,7 @@ export function CompetitionDetail() {
 
   const timeline: any[] = competition.timeline || [];
   const requirements: string[] = competition.requirements || [];
+  const hadiah: string = (competition as any).hadiah || '';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -279,9 +280,10 @@ export function CompetitionDetail() {
                 {/* Top Prize */}
                 <div className="mb-6">
                   <div className="text-3xl font-bold text-[#C8102E] mb-1">
-                    {competition.prizes && competition.prizes[0] ? competition.prizes[0].split(' ')[0] : 'TBA'}
+                    {hadiah ? hadiah.split(',')[0].trim() : 'TBA'}
                   </div>
                   <div className="text-gray-600 text-sm">Top Prize</div>
+                  {hadiah && <div className="text-gray-700 mt-1 text-sm">{hadiah}</div>}
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-4 mb-4 border border-blue-200 dark:border-blue-900/30">
@@ -335,14 +337,14 @@ export function CompetitionDetail() {
               </div>
 
               {/* Prizes */}
-              {competition.prizes && competition.prizes.length > 0 && (
+              {hadiah && (
                 <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-2xl p-6 border border-yellow-200 dark:border-amber-900/30">
                   <div className="flex items-center gap-2 mb-4">
                     <Trophy className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                    <h3 className="font-bold text-[#333333]">Prizes</h3>
+                    <h3 className="font-bold text-[#333333]">Hadiah</h3>
                   </div>
                   <div className="space-y-2">
-                    {competition.prizes.map((prize: string, i: number) => (
+                    {hadiah.split(',').map((prize: string, i: number) => (
                       <div key={i} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0" />
                         <span>{prize.trim()}</span>
