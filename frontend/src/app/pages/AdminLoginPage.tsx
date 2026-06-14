@@ -43,16 +43,17 @@ export function AdminLoginPage() {
 
     setIsLoading(true);
     try {
-      const res = await authApi.login(formData.email, formData.password);
+      const res = await authApi.login({ email: formData.email, password: formData.password });
       if (res.user.role !== 'admin') {
         setErrors({ form: 'You do not have admin privileges' });
         return;
       }
       login(res.user, res.accessToken);
-      const from = (location.state as any)?.from?.pathname || appPaths.adminDashboard;
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || appPaths.adminDashboard;
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setErrors({ form: err.response?.data?.message || 'Invalid admin credentials' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid admin credentials';
+      setErrors({ form: message });
     } finally {
       setIsLoading(false);
     }

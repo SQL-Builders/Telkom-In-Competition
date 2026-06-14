@@ -424,6 +424,16 @@ const competitionController = {
     }
   },
 
+  async updateRegistrantReview(req, res, next) {
+    try {
+      const registrationId = parseInt(req.params.id, 10);
+      const updated = await competitionService.updateRegistrantReview(registrationId, req.body.reviewData);
+      return successResponse(res, 'Review updated successfully.', updated);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async createRegistrationAdmin(req, res, next) {
     try {
       const registration = await competitionService.createRegistrationAdmin(req.body);

@@ -80,9 +80,9 @@ export function CompetitionCard({
 
       className="
         group relative
-        bg-white
+        bg-white dark:bg-[#1E293B]
         rounded-2xl overflow-hidden
-        border border-gray-200
+        border border-gray-200 dark:border-gray-800
         hover:border-[#C8102E]
         hover:shadow-2xl
         transition-all
@@ -177,35 +177,35 @@ export function CompetitionCard({
 
         <div className="flex items-center gap-2 mb-3">
 
-          <span className="px-3 py-1 bg-[#C8102E]/10 text-[#C8102E] rounded-lg text-sm font-semibold">
+          <span className="px-3 py-1 bg-[#C8102E]/10 dark:bg-[#C8102E]/20 text-[#C8102E] dark:text-[#FF4D6D] rounded-lg text-sm font-semibold">
             {category}
           </span>
 
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
+          <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg text-sm font-medium">
             {level}
           </span>
 
           {biaya !== undefined && (
-            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-bold ml-auto">
+            <span className="px-3 py-1 bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 rounded-lg text-sm font-bold ml-auto">
               {biaya === 0 ? 'Free' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(biaya)}
             </span>
           )}
 
         </div>
 
-        <h3 className="text-xl font-bold text-[#333333] mb-3 line-clamp-2 group-hover:text-[#C8102E] transition-colors">
+        <h3 className="text-xl font-bold text-[#333333] dark:text-white mb-3 line-clamp-2 group-hover:text-[#C8102E] dark:group-hover:text-[#FF4D6D] transition-colors">
 
           {title}
 
         </h3>
 
-        <p className="text-gray-600 mb-4 line-clamp-2 leading-relaxed">
+        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2 leading-relaxed">
 
           {description}
 
         </p>
 
-        <div className="flex items-center gap-4 mb-5 text-sm text-gray-500">
+        <div className="flex items-center gap-4 mb-5 text-sm text-gray-500 dark:text-gray-400">
 
           <div className="flex items-center gap-1.5">
 

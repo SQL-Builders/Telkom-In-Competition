@@ -81,6 +81,13 @@ export function AdminDashboard() {
     status_pendaftaran: 'pending',
     stage: 'University',
     nomor_pendaftaran: '',
+    overallScore: 0,
+    reviewerComments: '',
+    strengths: [] as string[],
+    improvements: [] as string[],
+    scores: [] as Array<{ criteria: string; score: number; maxScore: number }>,
+    newStrength: '',
+    newImprovement: '',
   });
   
   // Search states
@@ -256,29 +263,142 @@ export function AdminDashboard() {
 
   const handleEditSubmission = (sub: any) => {
     setEditingSubmission(sub);
+    const dbReview = sub.registrationData?.form_data?._review_data || {};
+    const cleanReview = dbReview.overallScore !== undefined ? { University: dbReview } : dbReview;
+    const currentStage = sub.registrationData?.stage || sub.stage || 'University';
+    const stageReview = cleanReview[currentStage] || {};
+
     setSubmissionForm({
       id_lomba: sub.registrationData?.id_lomba || sub.id_lomba || '',
       status_pendaftaran: sub.registrationData?.status_pendaftaran || sub.status || 'pending',
-      stage: sub.registrationData?.stage || sub.stage || 'University',
+      stage: currentStage,
       nomor_pendaftaran: sub.registrationData?.nomor_pendaftaran || sub.nomor_pendaftaran || '',
+      overallScore: stageReview.overallScore || 0,
+      reviewerComments: stageReview.reviewerComments || '',
+      strengths: stageReview.feedback?.strengths || [],
+      improvements: stageReview.feedback?.improvements || [],
+      scores: stageReview.scores && stageReview.scores.length > 0 ? stageReview.scores : [
+        { criteria: 'Innovation & Originality', score: 0, maxScore: 100 },
+        { criteria: 'Problem Understanding', score: 0, maxScore: 100 },
+        { criteria: 'Solution Feasibility', score: 0, maxScore: 100 },
+        { criteria: 'Presentation Quality', score: 0, maxScore: 100 },
+        { criteria: 'Team Composition', score: 0, maxScore: 100 },
+      ],
+      newStrength: '',
+      newImprovement: '',
     });
     setShowEditSubmissionModal(true);
+  };
+
+  const handleScoreChange = (index: number, val: string) => {
+    const newScores = [...submissionForm.scores];
+    const numVal = Math.min(100, Math.max(0, parseInt(val, 10) || 0));
+    newScores[index] = { ...newScores[index], score: numVal };
+    
+    // Calculate overall score (average of all criteria scores)
+    const sum = newScores.reduce((acc, s) => acc + s.score, 0);
+    const avg = Math.round(sum / newScores.length);
+    
+    setSubmissionForm({
+      ...submissionForm,
+      scores: newScores,
+      overallScore: avg,
+    });
+  };
+
+  const addStrength = () => {
+    if (!submissionForm.newStrength.trim()) return;
+    setSubmissionForm({
+      ...submissionForm,
+      strengths: [...submissionForm.strengths, submissionForm.newStrength.trim()],
+      newStrength: '',
+    });
+  };
+
+  const removeStrength = (idx: number) => {
+    setSubmissionForm({
+      ...submissionForm,
+      strengths: submissionForm.strengths.filter((_, i) => i !== idx),
+    });
+  };
+
+  const addImprovement = () => {
+    if (!submissionForm.newImprovement.trim()) return;
+    setSubmissionForm({
+      ...submissionForm,
+      improvements: [...submissionForm.improvements, submissionForm.newImprovement.trim()],
+      newImprovement: '',
+    });
+  };
+
+  const removeImprovement = (idx: number) => {
+    setSubmissionForm({
+      ...submissionForm,
+      improvements: submissionForm.improvements.filter((_, i) => i !== idx),
+    });
   };
 
   const handleSaveSubmission = async () => {
     if (!editingSubmission) return;
     const subId = editingSubmission.id || editingSubmission.registrationData?.id_pendaftaran;
+    
+    // Minimum score validation: Score must be at least 70 to be approved
+    const isApprovedStatus = ['accepted', 'approved', 'university-approved', 'national-reviewed'].includes(submissionForm.status_pendaftaran);
+    const scoreVal = Number(submissionForm.overallScore);
+    if (isApprovedStatus && scoreVal < 70) {
+      alert("Error: Status 'Lolos / Setuju' memerlukan nilai rata-rata minimal 70. Nilai saat ini adalah " + scoreVal + "/100.");
+      return;
+    }
+
     try {
+      const reviewPayload = {
+        overallScore: scoreVal,
+        maxScore: 100,
+        reviewerComments: submissionForm.reviewerComments,
+        feedback: {
+          strengths: submissionForm.strengths,
+          improvements: submissionForm.improvements,
+        },
+        scores: submissionForm.scores,
+        reviewedAt: new Date().toISOString(),
+      };
+
+      const existingReview = editingSubmission.registrationData?.form_data?._review_data || {};
+      const cleanReview = existingReview.overallScore !== undefined ? { University: existingReview } : existingReview;
+      
+      const mergedReview = {
+        ...cleanReview,
+        [submissionForm.stage]: reviewPayload
+      };
+
       const updates: Promise<any>[] = [
         competitionsApi.updateRegistrationStatus(subId, submissionForm.status_pendaftaran),
         competitionsApi.updateRegistrantStage(subId, submissionForm.stage),
+        competitionsApi.updateRegistrationReview(subId, mergedReview),
       ];
       await Promise.all(updates);
 
       // Update local state
-      const updater = (s: any) => s.id === editingSubmission.id
-        ? { ...s, status: submissionForm.status_pendaftaran, stage: submissionForm.stage }
-        : s;
+      const updater = (s: any) => {
+        if (s.id === editingSubmission.id || s.registrationData?.id_pendaftaran === subId) {
+          const regData = s.registrationData || {};
+          return {
+            ...s,
+            status: submissionForm.status_pendaftaran,
+            stage: submissionForm.stage,
+            registrationData: {
+              ...regData,
+              status_pendaftaran: submissionForm.status_pendaftaran,
+              stage: submissionForm.stage,
+              form_data: {
+                ...(regData.form_data || {}),
+                _review_data: mergedReview
+              }
+            }
+          };
+        }
+        return s;
+      };
       setSubmissions(prev => prev.map(updater));
       setParticipants(prev => prev.map(updater));
       setShowEditSubmissionModal(false);
@@ -291,12 +411,110 @@ export function AdminDashboard() {
 
   const handleUpdateSubmissionStatusQuick = async (id: number, status: string) => {
     try {
-      await competitionsApi.updateRegistrationStatus(id, status);
-      const updater = (s: any) => s.id === id || s.registrationData?.id_pendaftaran === id ? { ...s, status } : s;
+      const isApproved = status === 'accepted' || status === 'approved' || status === 'university-approved' || status === 'national-reviewed';
+      
+      // Get current stage of the submission
+      const sub = submissions.find(s => s.id === id || s.registrationData?.id_pendaftaran === id);
+      const currentStage = sub?.registrationData?.stage || sub?.stage || 'University';
+      let nextStage = currentStage;
+      if (isApproved) {
+        if (currentStage === 'University') nextStage = 'National';
+        else if (currentStage === 'National') nextStage = 'International';
+      }
+
+      const reviewPayload = {
+        overallScore: isApproved ? 85 : 62,
+        maxScore: 100,
+        reviewerComments: isApproved
+          ? `Excellent work! The proposal is well-written, demonstrates a strong understanding of the user needs, and details a clear implementation strategy. Approved to proceed to the ${nextStage} stage.`
+          : 'The proposal lacks detailed implementation steps and clear validation metrics. Please review the feedback and improve these areas for future applications.',
+        feedback: isApproved ? {
+          strengths: [
+            'Problem statement is clear and well-defined',
+            'The proposed solution is innovative and practical',
+            'Strong presentation of ideas and methodology',
+          ],
+          improvements: [
+            'Refine the implementation timeline',
+            'Provide more details on resource requirements',
+          ]
+        } : {
+          strengths: [
+            'Good core concept and user understanding',
+          ],
+          improvements: [
+            'Insufficient technical depth and details on implementation',
+            'Unrealistic project timeline',
+            'Need to clarify key feature benefits',
+          ]
+        },
+        scores: isApproved ? [
+          { criteria: 'Innovation & Originality', score: 90, maxScore: 100 },
+          { criteria: 'Problem Understanding', score: 88, maxScore: 100 },
+          { criteria: 'Solution Feasibility', score: 82, maxScore: 100 },
+          { criteria: 'Presentation Quality', score: 85, maxScore: 100 },
+          { criteria: 'Team Composition', score: 80, maxScore: 100 },
+        ] : [
+          { criteria: 'Innovation & Originality', score: 70, maxScore: 100 },
+          { criteria: 'Problem Understanding', score: 55, maxScore: 100 },
+          { criteria: 'Solution Feasibility', score: 50, maxScore: 100 },
+          { criteria: 'Presentation Quality', score: 68, maxScore: 100 },
+          { criteria: 'Team Composition', score: 67, maxScore: 100 },
+        ],
+        reviewedAt: new Date().toISOString(),
+      };
+
+      const existingReview = sub?.registrationData?.form_data?._review_data || {};
+      const cleanReview = existingReview.overallScore !== undefined ? { University: existingReview } : existingReview;
+      const mergedReview = {
+        ...cleanReview,
+        [currentStage]: reviewPayload
+      };
+
+      await Promise.all([
+        competitionsApi.updateRegistrationStatus(id, status),
+        competitionsApi.updateRegistrantStage(id, nextStage),
+        competitionsApi.updateRegistrationReview(id, mergedReview)
+      ]);
+
+      const updater = (s: any) => {
+        if (s.id === id || s.registrationData?.id_pendaftaran === id) {
+          const regData = s.registrationData || {};
+          return {
+            ...s,
+            status,
+            stage: nextStage,
+            registrationData: {
+              ...regData,
+              status_pendaftaran: status,
+              stage: nextStage,
+              form_data: {
+                ...(regData.form_data || {}),
+                _review_data: mergedReview
+              }
+            }
+          };
+        }
+        return s;
+      };
+
       setSubmissions(prev => prev.map(updater));
       setParticipants(prev => prev.map(updater));
       if (viewingSubmission && (viewingSubmission.id === id || viewingSubmission.registrationData?.id_pendaftaran === id)) {
-        setViewingSubmission({ ...viewingSubmission, status });
+        setViewingSubmission({
+          ...viewingSubmission,
+          status,
+          stage: nextStage,
+          registrationData: {
+            ...(viewingSubmission.registrationData || {}),
+            status_pendaftaran: status,
+            stage: nextStage,
+            form_data: {
+              ...(viewingSubmission.registrationData?.form_data || {}),
+              _review_data: mergedReview
+            }
+          }
+        });
       }
     } catch (err) {
       console.error('Error updating status', err);
@@ -378,11 +596,20 @@ export function AdminDashboard() {
         .dark-theme-active .border-gray-200 {
           border-color: #1e293b !important;
         }
+        .dark-theme-active .border-gray-100 {
+          border-color: #1e293b !important;
+        }
         .dark-theme-active .text-gray-700 {
           color: #cbd5e1 !important;
         }
         .dark-theme-active .text-gray-600 {
           color: #94a3b8 !important;
+        }
+        .dark-theme-active .text-gray-500 {
+          color: #64748b !important;
+        }
+        .dark-theme-active .text-gray-800 {
+          color: #f1f5f9 !important;
         }
         .dark-theme-active .text-[#333333] {
           color: #ffffff !important;
@@ -404,6 +631,40 @@ export function AdminDashboard() {
         }
         .dark-theme-active .bg-gray-50 {
           background-color: #1d2b44 !important;
+        }
+        .dark-theme-active .bg-gray-100 {
+          background-color: #1e293b !important;
+          color: #cbd5e1 !important;
+        }
+        
+        /* Interactive/Hover Elements Overrides */
+        .dark-theme-active .hover\:bg-gray-50:hover {
+          background-color: #1e293b !important;
+        }
+        .dark-theme-active .hover\:bg-gray-100:hover {
+          background-color: #1d2b44 !important;
+        }
+        .dark-theme-active .hover\:bg-red-50:hover {
+          background-color: rgba(220, 38, 38, 0.15) !important;
+        }
+        .dark-theme-active .hover\:bg-green-50:hover {
+          background-color: rgba(22, 163, 74, 0.15) !important;
+        }
+        .dark-theme-active .hover\:bg-blue-50:hover {
+          background-color: rgba(37, 99, 235, 0.15) !important;
+        }
+        
+        /* Links & Special Badge Overrides */
+        .dark-theme-active .bg-red-50 {
+          background-color: rgba(200, 16, 46, 0.15) !important;
+          color: #f87171 !important;
+        }
+        
+        /* File input upload button styling */
+        .dark-theme-active input[type="file"]::file-selector-button {
+          background-color: #151F32 !important;
+          color: #ffffff !important;
+          border-color: #1e293b !important;
         }
       `}</style>
       {/* Sidebar - Desktop */}
@@ -1446,12 +1707,12 @@ export function AdminDashboard() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl max-w-lg w-full shadow-2xl"
+              className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col max-h-[85vh]"
             >
               {/* Header */}
-              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                 <div>
-                  <h2 className="text-xl font-bold text-[#333333]">Edit Submission</h2>
+                  <h2 className="text-xl font-bold text-[#333333]">Edit Submission & Review</h2>
                   <p className="text-sm text-gray-500 mt-0.5">
                     {editingSubmission.registrationData?.user_pengguna?.name || editingSubmission.team || 'Peserta'}
                   </p>
@@ -1461,7 +1722,7 @@ export function AdminDashboard() {
                 </button>
               </div>
 
-              <div className="p-6 space-y-5">
+              <div className="p-6 space-y-5 overflow-y-auto flex-1">
                 {/* Info read-only */}
                 <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -1516,10 +1777,140 @@ export function AdminDashboard() {
                   </select>
                 </div>
 
+                {/* Lembar Penilaian Proposal */}
+                {submissionForm.status_pendaftaran !== 'pending' && (
+                  <div className="border-t border-gray-200 pt-5 space-y-4">
+                    <h3 className="text-md font-bold text-gray-800 flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-[#C8102E]" />
+                      Lembar Penilaian Proposal
+                    </h3>
+
+                    {/* Overall Score display */}
+                    <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-sm text-gray-500 font-medium">Nilai Akhir (Rata-rata)</span>
+                        <p className="text-xs text-gray-400">Dihitung otomatis dari kriteria di bawah</p>
+                      </div>
+                      <div className="text-3xl font-extrabold text-[#C8102E]">
+                        {submissionForm.overallScore} <span className="text-lg text-gray-400 font-normal">/100</span>
+                      </div>
+                    </div>
+
+                    {/* Criteria Scores grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {submissionForm.scores.map((scoreObj, idx) => (
+                        <div key={scoreObj.criteria}>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                            {scoreObj.criteria}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={scoreObj.score}
+                              onChange={(e) => handleScoreChange(idx, e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#C8102E] text-sm font-semibold"
+                            />
+                            <span className="text-gray-400 text-xs font-medium">/100</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Reviewer Comments */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Catatan Reviewer</label>
+                      <textarea
+                        rows={3}
+                        value={submissionForm.reviewerComments}
+                        onChange={(e) => setSubmissionForm({ ...submissionForm, reviewerComments: e.target.value })}
+                        placeholder="Tulis umpan balik menyeluruh untuk proposal ini..."
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#C8102E] text-sm"
+                      />
+                    </div>
+
+                    {/* Strengths & Improvements */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Strengths */}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-gray-600">Kelebihan (Strengths)</label>
+                        <div className="space-y-1.5 max-h-[120px] overflow-y-auto border border-gray-100 rounded-lg p-2 bg-gray-50/50">
+                          {submissionForm.strengths.length === 0 ? (
+                            <p className="text-[11px] text-gray-400 italic">Belum ada kelebihan ditambahkan.</p>
+                          ) : (
+                            submissionForm.strengths.map((str, idx) => (
+                              <div key={idx} className="flex items-center justify-between gap-2 bg-white px-2 py-1 rounded border border-gray-200 text-xs">
+                                <span className="truncate flex-1">{str}</span>
+                                <button type="button" onClick={() => removeStrength(idx)} className="text-red-500 hover:text-red-700">
+                                  <XCircle className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="flex gap-1.5">
+                          <input
+                            type="text"
+                            placeholder="Tambah kelebihan..."
+                            value={submissionForm.newStrength}
+                            onChange={(e) => setSubmissionForm({ ...submissionForm, newStrength: e.target.value })}
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addStrength())}
+                            className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs"
+                          />
+                          <button
+                            type="button"
+                            onClick={addStrength}
+                            className="px-3 py-1.5 bg-gray-800 text-white font-bold rounded-lg text-xs hover:bg-gray-700"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Improvements */}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-gray-600">Perlu Ditingkatkan (Improvements)</label>
+                        <div className="space-y-1.5 max-h-[120px] overflow-y-auto border border-gray-100 rounded-lg p-2 bg-gray-50/50">
+                          {submissionForm.improvements.length === 0 ? (
+                            <p className="text-[11px] text-gray-400 italic">Belum ada saran perbaikan.</p>
+                          ) : (
+                            submissionForm.improvements.map((imp, idx) => (
+                              <div key={idx} className="flex items-center justify-between gap-2 bg-white px-2 py-1 rounded border border-gray-200 text-xs">
+                                <span className="truncate flex-1">{imp}</span>
+                                <button type="button" onClick={() => removeImprovement(idx)} className="text-red-500 hover:text-red-700">
+                                  <XCircle className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="flex gap-1.5">
+                          <input
+                            type="text"
+                            placeholder="Tambah perbaikan..."
+                            value={submissionForm.newImprovement}
+                            onChange={(e) => setSubmissionForm({ ...submissionForm, newImprovement: e.target.value })}
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addImprovement())}
+                            className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs"
+                          />
+                          <button
+                            type="button"
+                            onClick={addImprovement}
+                            className="px-3 py-1.5 bg-gray-800 text-white font-bold rounded-lg text-xs hover:bg-gray-700"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
 
               {/* Footer */}
-              <div className="p-6 border-t border-gray-200 flex gap-3">
+              <div className="p-6 border-t border-gray-200 flex gap-3 flex-shrink-0">
                 <motion.button
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={() => setShowEditSubmissionModal(false)}

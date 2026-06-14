@@ -1,18 +1,50 @@
 import { apiClient } from './client';
+import type {
+  AuthResponse,
+  AuthUser,
+  ChangePasswordRequest,
+  LoginRequest,
+  RefreshTokenRequest,
+  RegisterRequest,
+} from './types';
 
+/** Auth API — wraps semua endpoint /api/auth */
 export const authApi = {
-  login: async (email: string, password: string) => {
-    const response = await apiClient.post('/auth/login', { email, password });
+  /** Login user, returns token + user data */
+  login: async (credentials: LoginRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post<{ data: AuthResponse }>(
+      '/auth/login',
+      credentials
+    );
     return response.data.data;
   },
 
-  register: async (userData: any) => {
-    const response = await apiClient.post('/auth/register', userData);
+  /** Register user baru */
+  register: async (userData: RegisterRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post<{ data: AuthResponse }>(
+      '/auth/register',
+      userData
+    );
     return response.data.data;
   },
 
-  getMe: async () => {
-    const response = await apiClient.get('/auth/me');
+  /** Ambil data user yang sedang login (requires token) */
+  getMe: async (): Promise<AuthUser> => {
+    const response = await apiClient.get<{ data: AuthUser }>('/auth/me');
+    return response.data.data;
+  },
+
+  /** Ganti password (requires token) */
+  changePassword: async (data: ChangePasswordRequest): Promise<void> => {
+    await apiClient.put('/auth/change-password', data);
+  },
+
+  /** Refresh access token menggunakan refresh token */
+  refreshToken: async (data: RefreshTokenRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post<{ data: AuthResponse }>(
+      '/auth/refresh-token',
+      data
+    );
     return response.data.data;
   },
 };

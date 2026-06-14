@@ -2,17 +2,40 @@ import { Navbar } from '../components/Navbar';
 import { FilterBar } from '../components/FilterBar';
 import { CompetitionCard } from '../components/CompetitionCard';
 import { useCompetitions } from '../hooks/useCompetitions';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
 
 function normalizeFilterValue(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 export function ExplorePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategory = searchParams.get('category') || 'all';
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState(initialCategory);
   const [deadline, setDeadline] = useState('all');
   const [level, setLevel] = useState('all');
+
+  // Sync state back to URL parameter
+  const handleCategoryChange = (val: string) => {
+    setCategory(val);
+    setSearchParams(prev => {
+      if (val === 'all') {
+        prev.delete('category');
+      } else {
+        prev.set('category', val);
+      }
+      return prev;
+    });
+  };
+
+  // Sync state when URL parameter changes
+  useEffect(() => {
+    const catParam = searchParams.get('category') || 'all';
+    setCategory(catParam);
+  }, [searchParams]);
 
   const { data: competitions, loading, error } = useCompetitions();
 
@@ -29,8 +52,14 @@ export function ExplorePage() {
         competition.title.toLowerCase().includes(query) ||
         competition.description.toLowerCase().includes(query) ||
         competition.category.toLowerCase().includes(query);
+
+      const compCatNorm = normalizeFilterValue(competition.category);
+      const filterCatNorm = normalizeFilterValue(category);
       const matchesCategory =
-        category === 'all' || normalizeFilterValue(competition.category) === category;
+        category === 'all' ||
+        compCatNorm.includes(filterCatNorm) ||
+        filterCatNorm.includes(compCatNorm);
+
       const matchesLevel =
         level === 'all' || normalizeFilterValue(competition.level) === level;
       const matchesDeadline =
@@ -52,7 +81,7 @@ export function ExplorePage() {
         deadline={deadline}
         level={level}
         onSearchTermChange={setSearchTerm}
-        onCategoryChange={setCategory}
+        onCategoryChange={handleCategoryChange}
         onDeadlineChange={setDeadline}
         onLevelChange={setLevel}
       />

@@ -58,10 +58,11 @@ export function CompetitionRegistration() {
         projectDescription: formData.projectDescription,
       });
       setStatus('success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setStatus('error');
-      setErrorMessage(err.response?.data?.message || 'Failed to submit registration');
+      const message = err instanceof Error ? err.message : 'Failed to submit registration';
+      setErrorMessage(message);
     }
   };
 

@@ -194,8 +194,9 @@ export function RegisterPage() {
       // Auto login after successful registration
       login(res.user, res.accessToken);
       navigate(appPaths.dashboard);
-    } catch (error: any) {
-      setErrors({ form: error.response?.data?.message || 'Failed to register. Please try again.' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to register. Please try again.';
+      setErrors({ form: message });
     } finally {
       setIsLoading(false);
     }

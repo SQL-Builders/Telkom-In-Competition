@@ -11,7 +11,7 @@ const mapCompetitionToFrontend = (comp, categoryObj) => {
     category: categoryObj ? categoryObj.nama_kategori : (comp.kategori_lomba?.nama_kategori || 'Uncategorized'),
     deadline: comp.deadline,
     level: comp.level || 'University',
-    participants: comp.data_pendaftaran_lomba?.[0]?.count || comp.jumlah_peserta || 0,
+    participants: (comp.jumlah_peserta || 0) + (comp.data_pendaftaran_lomba?.[0]?.count || 0),
     image: comp.gambar_poster?.[0]?.image_path || comp.gambar_poster?.image_path || '',
     organizer: comp.penyelenggara || '',
     location: comp.location || 'Online',
@@ -301,6 +301,26 @@ const competitionService = {
   async deleteCompetition(competitionId) {
     await this.getCompetitionById(competitionId);
 
+    // Delete bookmarks referencing this competition
+    const { error: favError } = await supabase
+      .from('lomba_favorit')
+      .delete()
+      .eq('id_lomba', competitionId);
+
+    if (favError) {
+      logger.warn('Failed to delete referencing bookmarks (non-critical):', favError);
+    }
+
+    // Delete registrations referencing this competition
+    const { error: regError } = await supabase
+      .from('data_pendaftaran_lomba')
+      .delete()
+      .eq('id_lomba', competitionId);
+
+    if (regError) {
+      logger.warn('Failed to delete referencing registrations (non-critical):', regError);
+    }
+
     const { error } = await supabase
       .from('data_lomba')
       .delete()
@@ -356,6 +376,25 @@ const competitionService = {
     if (error) {
       logger.error('Register for competition error:', error);
       throw new AppError('Failed to register for competition.', 500);
+    }
+
+    // Increment jumlah_peserta in data_lomba
+    try {
+      const { data: comp } = await supabase
+        .from('data_lomba')
+        .select('jumlah_peserta')
+        .eq('id_lomba', id_lomba)
+        .single();
+        
+      if (comp) {
+        const nextCount = (comp.jumlah_peserta || 0) + 1;
+        await supabase
+          .from('data_lomba')
+          .update({ jumlah_peserta: nextCount })
+          .eq('id_lomba', id_lomba);
+      }
+    } catch (e) {
+      logger.warn('Failed to increment participant count (non-critical):', e);
     }
 
     return registration;
@@ -549,6 +588,40 @@ const competitionService = {
     return registration;
   },
 
+  /**
+   * Update the review details of a registration, merging into form_data.
+   */
+  async updateRegistrantReview(registrationId, reviewData) {
+    // Get existing registration data
+    const { data: registration, error: fetchError } = await supabase
+      .from('data_pendaftaran_lomba')
+      .select('form_data')
+      .eq('id_pendaftaran', registrationId)
+      .single();
+
+    if (fetchError || !registration) {
+      throw new AppError('Registration not found.', 404);
+    }
+
+    const updatedFormData = {
+      ...(registration.form_data || {}),
+      _review_data: reviewData,
+    };
+
+    const { data: updated, error } = await supabase
+      .from('data_pendaftaran_lomba')
+      .update({ form_data: updatedFormData })
+      .eq('id_pendaftaran', registrationId)
+      .select('*')
+      .single();
+
+    if (error || !updated) {
+      logger.error('Update registrant review error:', error);
+      throw new AppError('Failed to update review.', 500);
+    }
+
+    return updated;
+  },
 
   /**
    * Delete a registration.
