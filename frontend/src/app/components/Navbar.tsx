@@ -1,15 +1,82 @@
-import {Search,BookMarked,Trophy,User, LogOut, Moon,Sun} from 'lucide-react'; 
+import {Search,BookMarked,Trophy,User, LogOut, Moon,Sun, Bell} from 'lucide-react'; 
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
+import { competitionsApi } from '../api/competitionsApi';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Navbar() {
 
   const navigate = useNavigate();
 
   const { isLoggedIn, user, logout } = useAuth();
+
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    async function checkNotifications() {
+      try {
+        const regs = await competitionsApi.getMyRegistrations();
+        if (regs && Array.isArray(regs)) {
+          const readList = JSON.parse(localStorage.getItem('telkom-in:read-notifications') || '[]');
+          
+          const notifs = regs
+            .filter((r: any) => {
+              const status = r.registrationData?.status_pendaftaran || r.status || 'pending';
+              return status === 'accepted' || status === 'approved' || status === 'rejected' || status === 'university-approved' || status === 'university-rejected';
+            })
+            .map((r: any) => {
+              const compTitle = r.competition?.title || 'Kompetisi';
+              const status = r.registrationData?.status_pendaftaran || r.status || 'pending';
+              const isApproved = status === 'accepted' || status === 'approved' || status === 'university-approved';
+              const stage = r.stage || r.registrationData?.stage || 'University';
+              const id = r.competition?.id || r.registrationData?.id_lomba;
+              
+              const notifId = `${id}-${status}-${stage}`;
+              
+              return {
+                id: notifId,
+                compId: id,
+                title: compTitle,
+                stage,
+                isApproved,
+                read: readList.includes(notifId),
+                date: r.registrationData?.updated_at || new Date().toISOString()
+              };
+            });
+          setNotifications(notifs);
+        }
+      } catch (err) {
+        console.error('Error fetching notifications in Navbar', err);
+      }
+    }
+
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
+
+  const handleNotificationClick = (notif: any) => {
+    const readList = JSON.parse(localStorage.getItem('telkom-in:read-notifications') || '[]');
+    if (!readList.includes(notif.id)) {
+      readList.push(notif.id);
+      localStorage.setItem('telkom-in:read-notifications', JSON.stringify(readList));
+    }
+    
+    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+    setShowNotifications(false);
+    navigate(`/competition/${notif.compId}/review-result`);
+  };
+
+  const handleMarkAllAsRead = () => {
+    const readList = notifications.map(n => n.id);
+    localStorage.setItem('telkom-in:read-notifications', JSON.stringify(readList));
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
 
   // ========================== DARK MODE ==========================
   const [darkMode, setDarkMode] = useState(
@@ -135,6 +202,76 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
+
+            {/* ========================== NOTIFICATION BELL ========================== */}
+            {isLoggedIn && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative ${
+                    darkMode
+                      ? 'bg-gray-800 text-white hover:bg-gray-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Bell className="w-5 h-5" />
+                  {notifications.some(n => !n.read) && (
+                    <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-600 rounded-full border-2 border-white animate-pulse" />
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className={`absolute right-0 mt-3 w-80 rounded-2xl shadow-xl border overflow-hidden z-50 transition-colors duration-300 ${
+                    darkMode 
+                      ? 'bg-[#1E293B] border-gray-700 text-white' 
+                      : 'bg-white border-gray-100 text-[#333333]'
+                  }`}>
+                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                      <span className="font-bold">Notifications</span>
+                      {notifications.some(n => !n.read) && (
+                        <button 
+                          onClick={handleMarkAllAsRead} 
+                          className="text-xs text-[#C8102E] font-semibold hover:underline"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-64 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-800/50">
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center text-sm text-gray-500">
+                          No notifications yet.
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div 
+                            key={n.id}
+                            onClick={() => handleNotificationClick(n)}
+                            className={`p-4 text-sm cursor-pointer transition-colors flex items-start gap-3 ${
+                              n.read 
+                                ? (darkMode ? 'hover:bg-slate-800/55' : 'hover:bg-gray-50') 
+                                : (darkMode ? 'bg-slate-800/40 hover:bg-slate-800/60' : 'bg-red-50/30 hover:bg-red-50/50')
+                            }`}
+                          >
+                            <span className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
+                              n.read ? 'bg-transparent' : 'bg-[#C8102E]'
+                            }`} />
+                            <div className="flex-1">
+                              <p className={`font-semibold ${n.read ? 'text-gray-400' : ''}`}>
+                                Proposal {n.isApproved ? 'Lolos' : 'Tidak Lolos'}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                                Proposal untuk {n.title} ({n.stage} Stage) telah selesai dinilai.
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ========================== DARK MODE BUTTON ========================== */}
             <button

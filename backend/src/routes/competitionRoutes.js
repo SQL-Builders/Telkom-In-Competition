@@ -42,6 +42,12 @@ router.patch(
   authorize('admin'),
   competitionController.updateRegistrantStage
 );
+router.patch(
+  '/registrations/:id/review',
+  authenticate,
+  authorize('admin'),
+  competitionController.updateRegistrantReview
+);
 router.delete(
   '/registrations/:id',
   authenticate,

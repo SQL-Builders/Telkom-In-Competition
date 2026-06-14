@@ -1,7 +1,67 @@
 import { useState, useEffect } from 'react';
 import { competitionsApi } from '../api/competitionsApi';
 import type { Competition } from '../data/competitions';
-import { competitions as mockCompetitions } from '../data/competitions';
+import { competitions as mockCompetitions, competitionHighlights as mockHighlights } from '../data/competitions';
+
+// Colour palette cycling for backend competitions that lack highlightColor
+const HIGHLIGHT_COLORS = [
+  'from-purple-500 to-pink-500',
+  'from-blue-500 to-cyan-500',
+  'from-orange-500 to-red-500',
+  'from-green-500 to-emerald-500',
+  'from-indigo-500 to-purple-500',
+  'from-pink-500 to-rose-500',
+  'from-red-600 to-pink-600',
+  'from-yellow-500 to-orange-500',
+];
+
+/**
+ * Normalize a raw competition object coming from the backend.
+ * The backend's mapCompetitionToFrontend already maps most fields,
+ * but shortTitle and highlightColor are frontend-only fields that may be missing.
+ */
+function normalizeCompetition(comp: any, index = 0): Competition {
+  return {
+    ...comp,
+    shortTitle: comp.shortTitle || comp.title || '',
+    highlightColor: comp.highlightColor || HIGHLIGHT_COLORS[index % HIGHLIGHT_COLORS.length],
+    heroGradient: comp.heroGradient || 'from-[#C8102E] via-[#E91E3A] to-[#FF4757]',
+    fullDescription: comp.fullDescription || comp.description || '',
+    registrationDeadline: comp.registrationDeadline || comp.deadline || '',
+    prizes: Array.isArray(comp.prizes)
+      ? comp.prizes
+      : comp.hadiah
+        ? [comp.hadiah]
+        : [],
+    whatsappGroup: comp.whatsappGroup || '',
+    location: comp.location || 'Online',
+    organizer: comp.organizer || '',
+    requirements: Array.isArray(comp.requirements) ? comp.requirements : [],
+    timeline: Array.isArray(comp.timeline) ? comp.timeline : [],
+    featured: comp.featured ?? false,
+    recommended: comp.recommended ?? false,
+  };
+}
+
+/**
+ * Deduplicate competitions by ID and normalized title (case-insensitive)
+ * to ensure that similar or duplicate event entries are combined/filtered out.
+ */
+function deduplicateCompetitions(comps: Competition[]): Competition[] {
+  const seenIds = new Set<number | string>();
+  const seenTitles = new Set<string>();
+  
+  return comps.filter(comp => {
+    if (!comp) return false;
+    const titleKey = comp.title.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (seenIds.has(comp.id) || seenTitles.has(titleKey)) {
+      return false;
+    }
+    seenIds.add(comp.id);
+    seenTitles.add(titleKey);
+    return true;
+  });
+}
 
 // We provide fallback to mock data in case backend is down or empty during development
 export function useCompetitions(params?: any) {
@@ -13,19 +73,12 @@ export function useCompetitions(params?: any) {
     async function fetchCompetitions() {
       try {
         setLoading(true);
-        const res = await competitionsApi.getAll(params) as any;
-        if (res) {
-          // Robustly extract array regardless of response shape
-          let finalData = [];
-          if (Array.isArray(res)) finalData = res;
-          else if (Array.isArray(res.data)) finalData = res.data;
-          else if (res.data && Array.isArray(res.data.data)) finalData = res.data.data;
-          else if (res.competitions && Array.isArray(res.competitions)) finalData = res.competitions;
-          
-          setData(finalData);
-        } else {
-          setData([]);
-        }
+        // competitionsApi.getAll now returns PaginatedResponse<Competition> directly
+        const res = await competitionsApi.getAll(params);
+        const finalData: Competition[] = Array.isArray(res.data)
+          ? res.data.map((c, i) => normalizeCompetition(c, i))
+          : [];
+        setData(deduplicateCompetitions(finalData));
       } catch (err) {
         console.error('Failed to fetch competitions', err);
         setData([]);
@@ -50,10 +103,12 @@ export function useCompetition(id?: string | number) {
       try {
         setLoading(true);
         const data = await competitionsApi.getById(id);
-        setCompetition(data || null);
+        setCompetition(data ? normalizeCompetition(data) : null);
       } catch (err) {
-        console.error('Failed to fetch competition', err);
-        setCompetition(null);
+        console.error('Failed to fetch competition from API, trying mock data…', err);
+        // Fallback: find in static mock data (useful for demo IDs 1–9)
+        const mock = mockCompetitions.find(c => c.id === Number(id));
+        setCompetition(mock ?? null);
       } finally {
         setLoading(false);
       }
@@ -62,6 +117,160 @@ export function useCompetition(id?: string | number) {
   }, [id]);
 
   return { competition, loading };
+}
+
+/**
+ * Helper to get card background styling (gradient color, placeholder image, and filter value)
+ * tailored to each competition category name.
+ */
+function getCategoryStyle(categoryName: string, index = 0) {
+  const norm = categoryName.toLowerCase().trim();
+  
+  // Default values
+  let color = HIGHLIGHT_COLORS[index % HIGHLIGHT_COLORS.length];
+  let image = '/competitions/web.jpg';
+  let filterValue = 'all';
+
+  if (norm.includes('ui/ux') || norm.includes('uiux')) {
+    color = 'from-purple-500 to-pink-500';
+    image = '/competitions/uiux.jpg';
+    filterValue = 'uiux';
+  } else if (norm.includes('cyber') || norm.includes('security')) {
+    color = 'from-red-600 to-pink-600';
+    image = '/competitions/ctf.jpg';
+    filterValue = 'it';
+  } else if (norm.includes('data') || norm.includes('science') || norm.includes('ai')) {
+    color = 'from-green-500 to-emerald-500';
+    image = '/competitions/data.jpg';
+    filterValue = 'datascience';
+  } else if (norm.includes('mobile')) {
+    color = 'from-indigo-500 to-purple-500';
+    image = '/competitions/mobile.jpg';
+    filterValue = 'it';
+  } else if (norm.includes('design') || norm.includes('graphic')) {
+    color = 'from-pink-500 to-rose-500';
+    image = '/competitions/graphic.jpg';
+    filterValue = 'design';
+  } else if (norm.includes('business') || norm.includes('plan')) {
+    color = 'from-orange-500 to-red-500';
+    image = '/competitions/business.jpg';
+    filterValue = 'business';
+  } else if (norm.includes('marketing')) {
+    color = 'from-yellow-500 to-orange-500';
+    image = '/competitions/marketing.jpg';
+    filterValue = 'business';
+  } else if (norm.includes('programming') || norm.includes('code') || norm.includes('hackathon') || norm.includes('it')) {
+    color = 'from-blue-500 to-cyan-500';
+    image = '/competitions/hackathon.jpg';
+    filterValue = 'it';
+  }
+
+  return { color, image, filterValue };
+}
+
+/**
+ * Hook for the Competition Highlights section.
+ * Group competitions by category, so instead of showing duplicate cards,
+ * we show category cards that navigate to Explore filtered by category.
+ */
+export function useCompetitionHighlights(limit = 8) {
+  const [highlights, setHighlights] = useState<{
+    id: string;
+    title: string;
+    color: string;
+    image: string;
+    categoryValue: string;
+    competitionCount: number;
+    competitions: Competition[];
+  }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchHighlights() {
+      try {
+        setLoading(true);
+        // Fetch up to 100 to group everything properly
+        const res = await competitionsApi.getAll({ limit: 100 });
+        const apiComps: Competition[] = Array.isArray(res.data)
+          ? res.data.map((c, i) => normalizeCompetition(c, i))
+          : [];
+
+        if (apiComps.length > 0) {
+          const categoryGroups: Record<string, {
+            title: string;
+            competitions: Competition[];
+          }> = {};
+
+          for (const comp of apiComps) {
+            const cat = comp.category || 'Uncategorized';
+            const normCat = cat.toLowerCase().trim();
+            if (!categoryGroups[normCat]) {
+              categoryGroups[normCat] = {
+                title: cat,
+                competitions: []
+              };
+            }
+            categoryGroups[normCat].competitions.push(comp);
+          }
+
+          const groupedHighlights = Object.entries(categoryGroups).map(([normCat, group], i) => {
+            const style = getCategoryStyle(group.title, i);
+            return {
+              id: `cat-${normCat}`,
+              title: group.title,
+              color: style.color,
+              image: style.image,
+              categoryValue: style.filterValue,
+              competitionCount: group.competitions.length,
+              competitions: group.competitions,
+            };
+          });
+
+          setHighlights(groupedHighlights.slice(0, limit));
+          return;
+        }
+      } catch (err) {
+        console.warn('Highlights API failed, using mock data:', err);
+      }
+
+      // Fallback to static mock highlights grouped by category
+      const categoryGroups: Record<string, {
+        title: string;
+        competitions: Competition[];
+      }> = {};
+
+      for (const comp of mockCompetitions) {
+        const cat = comp.category || 'Uncategorized';
+        const normCat = cat.toLowerCase().trim();
+        if (!categoryGroups[normCat]) {
+          categoryGroups[normCat] = {
+            title: cat,
+            competitions: []
+          };
+        }
+        categoryGroups[normCat].competitions.push(comp);
+      }
+
+      const groupedMocks = Object.entries(categoryGroups).map(([normCat, group], i) => {
+        const style = getCategoryStyle(group.title, i);
+        return {
+          id: `cat-${normCat}`,
+          title: group.title,
+          color: style.color,
+          image: style.image,
+          categoryValue: style.filterValue,
+          competitionCount: group.competitions.length,
+          competitions: group.competitions,
+        };
+      });
+
+      setHighlights(groupedMocks.slice(0, limit));
+    }
+
+    fetchHighlights().finally(() => setLoading(false));
+  }, [limit]);
+
+  return { highlights, loading };
 }
 
 export function useFeaturedCompetitions() {
@@ -76,8 +285,10 @@ export function useFeaturedCompetitions() {
 
 export function useRecommendedCompetitions() {
   const { data, loading } = useCompetitions();
+  const recommended = data.filter(c => c.recommended);
   return { 
-    data: data.filter(c => c.recommended),
+    // If none are flagged as recommended, show first 3
+    data: recommended.length > 0 ? recommended : data.slice(0, 3),
     loading 
   };
 }
@@ -94,7 +305,28 @@ export function useMyCompetitions() {
         setLoading(true);
         const res = await competitionsApi.getMyRegistrations();
         if (res) {
-          setData(res);
+          const mapped = Array.isArray(res) ? res.map((reg: any) => {
+            const dbStatus = reg.status || reg.registrationData?.status_pendaftaran || 'pending';
+            const stage = reg.stage || reg.registrationData?.stage || 'University';
+            
+            let status = dbStatus;
+            if (stage === 'University') {
+              if (dbStatus === 'accepted' || dbStatus === 'approved') status = 'university-approved';
+              else if (dbStatus === 'rejected') status = 'university-rejected';
+              else status = 'university-pending';
+            } else if (stage === 'National') {
+              if (dbStatus === 'accepted' || dbStatus === 'approved') status = 'national-reviewed';
+              else status = 'national-submitted';
+            } else if (stage === 'International') {
+              status = 'national-reviewed';
+            }
+            
+            return {
+              ...reg,
+              status
+            };
+          }) : [];
+          setData(mapped);
         } else {
           setData([]);
         }
