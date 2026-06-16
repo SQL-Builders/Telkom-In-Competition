@@ -33,6 +33,13 @@ const uploadController = {
       }
 
       const prefix = req.body.prefix || '';
+
+      // Poster files have a 2MB limit
+      const POSTER_MAX_SIZE = 2 * 1024 * 1024; // 2MB
+      if (prefix.startsWith('Poster_') && req.file.size > POSTER_MAX_SIZE) {
+        throw new AppError('Ukuran file poster terlalu besar! Maksimal 2MB.', 400);
+      }
+
       const berkasRecord = await uploadService.uploadFile(req.file, req.user.id_user, prefix);
 
       return successResponse(
