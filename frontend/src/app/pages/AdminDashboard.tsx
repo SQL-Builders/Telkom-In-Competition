@@ -1491,7 +1491,7 @@ export function AdminDashboard() {
 
                 {/* Poster Upload */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Competition Poster (PNG, JPG, JPEG)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Competition Poster (PNG, JPG, JPEG — Maks. 2MB)</label>
                   {posterPreview && !posterFile && (
                     <img src={posterPreview} alt="Current poster" className="w-full h-40 object-cover rounded-xl mb-2 border border-gray-200" />
                   )}
@@ -1499,8 +1499,8 @@ export function AdminDashboard() {
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         const f = e.target.files[0];
-                        if (f.size > 10 * 1024 * 1024) {
-                          alert('Ukuran file terlalu besar! Maksimal 10MB.');
+                        if (f.size > 2 * 1024 * 1024) {
+                          alert('Ukuran file terlalu besar! Maksimal 2MB.');
                           e.target.value = ''; // Reset input
                           return;
                         }

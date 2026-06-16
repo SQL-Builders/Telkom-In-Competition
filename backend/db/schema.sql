@@ -77,7 +77,7 @@ CREATE TABLE public.data_pendaftaran_lomba (
   id_pendaftaran integer NOT NULL DEFAULT nextval('data_pendaftaran_lomba_id_pendaftaran_seq'::regclass),
   id_user integer,
   id_lomba integer,
-  id_berkas integer,
+  id_data_berkas integer,
   tgl_daftar timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   status_pendaftaran character varying DEFAULT 'pending'::character varying CHECK (status_pendaftaran::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying, 'rejected'::character varying, 'under_review'::character varying]::text[])),
   nomor_pendaftaran character varying,
@@ -86,7 +86,7 @@ CREATE TABLE public.data_pendaftaran_lomba (
   CONSTRAINT data_pendaftaran_lomba_pkey PRIMARY KEY (id_pendaftaran),
   CONSTRAINT data_pendaftaran_lomba_id_user_fkey FOREIGN KEY (id_user) REFERENCES public.user_pengguna(id_user),
   CONSTRAINT data_pendaftaran_lomba_id_lomba_fkey FOREIGN KEY (id_lomba) REFERENCES public.data_lomba(id_lomba),
-  CONSTRAINT data_pendaftaran_lomba_id_berkas_fkey FOREIGN KEY (id_berkas) REFERENCES public.data_berkas(id_data_berkas)
+  CONSTRAINT data_pendaftaran_lomba_id_data_berkas_fkey FOREIGN KEY (id_data_berkas) REFERENCES public.data_berkas(id_data_berkas)
 );
 
 CREATE TABLE public.lomba_favorit (

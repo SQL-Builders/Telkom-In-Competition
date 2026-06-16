@@ -253,9 +253,9 @@ const competitionController = {
    *         application/json:
    *           schema:
    *             type: object
-   *             required: [id_berkas]
+   *             required: [id_data_berkas]
    *             properties:
-   *               id_berkas:
+   *               id_data_berkas:
    *                 type: integer
    *     responses:
    *       201:
@@ -270,7 +270,7 @@ const competitionController = {
         req.user.id_user,
         {
           id_lomba: competitionId,
-          id_berkas: req.body.id_berkas,
+          id_data_berkas: req.body.id_data_berkas,
           form_data: req.body.form_data,
         }
       );

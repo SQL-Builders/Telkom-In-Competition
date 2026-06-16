@@ -64,7 +64,7 @@ export function SubmitProposal() {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
           
-          // Use the first file to populate id_berkas if not set yet
+          // Use the first file to populate id_data_berkas if not set yet
           if (!berkasId) {
             berkasId = uploadRes.data?.data?.id_data_berkas;
           }
@@ -76,7 +76,7 @@ export function SubmitProposal() {
 
       // Submit registration
       await competitionsApi.register(competition.id, {
-        ...(berkasId && { id_berkas: berkasId }),
+        ...(berkasId && { id_data_berkas: berkasId }),
         form_data: finalFormValues,
       });
       setStatus('success');
