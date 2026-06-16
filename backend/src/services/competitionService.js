@@ -338,7 +338,7 @@ const competitionService = {
    * Register a user for a competition.
    */
   async registerForCompetition(userId, competitionData) {
-    const { id_lomba, id_berkas } = competitionData;
+    const { id_lomba, id_data_berkas } = competitionData;
 
     // Check competition exists
     await this.getCompetitionById(id_lomba);
@@ -367,7 +367,7 @@ const competitionService = {
         tgl_daftar: new Date().toISOString(),
         status_pendaftaran: 'pending',
         nomor_pendaftaran: nomorPendaftaran,
-        id_berkas: competitionData.id_berkas || null,
+        id_data_berkas: competitionData.id_data_berkas || null,
         form_data: competitionData.form_data || {},
       })
       .select('*')
@@ -418,7 +418,7 @@ const competitionService = {
           deadline,
           kategori_lomba ( id_kategori, nama_kategori )
         ),
-        data_berkas:id_berkas ( id_data_berkas, file_path, nama_berkas )
+        data_berkas:id_data_berkas ( id_data_berkas, file_path, nama_berkas )
       `)
       .eq('id_user', userId)
       .order('tgl_daftar', { ascending: false });
@@ -481,7 +481,7 @@ const competitionService = {
         *,
         user_pengguna ( id_user, name, email, no_telepon ),
         data_lomba ( id_lomba, nama_lomba, kategori_lomba ( id_kategori, nama_kategori ) ),
-        data_berkas:id_berkas ( id_data_berkas, file_path, nama_berkas )
+        data_berkas:id_data_berkas ( id_data_berkas, file_path, nama_berkas )
       `)
       .order('tgl_daftar', { ascending: false });
 
@@ -504,7 +504,7 @@ const competitionService = {
       submittedDate: reg.tgl_daftar,
       status: reg.status_pendaftaran,
       stage: reg.stage || 'University',
-      proposal: reg.id_berkas ? 'Proposal Submitted' : 'No Proposal',
+      proposal: reg.id_data_berkas ? 'Proposal Submitted' : 'No Proposal',
       registrationData: reg
     }));
   },
