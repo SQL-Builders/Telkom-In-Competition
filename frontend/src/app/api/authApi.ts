@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import type {
   AuthResponse,
+  CurrentAuthUser,
   AuthUser,
   ChangePasswordRequest,
   LoginRequest,
@@ -29,8 +30,8 @@ export const authApi = {
   },
 
   /** Ambil data user yang sedang login (requires token) */
-  getMe: async (): Promise<AuthUser> => {
-    const response = await apiClient.get<{ data: AuthUser }>('/auth/me');
+  getMe: async (): Promise<CurrentAuthUser> => {
+    const response = await apiClient.get<{ data: CurrentAuthUser }>('/auth/me');
     return response.data.data;
   },
 
