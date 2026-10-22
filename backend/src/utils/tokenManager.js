@@ -11,7 +11,7 @@ const tokenManager = {
    * @returns {string} Signed JWT token.
    */
   generateAccessToken(payload) {
-    return jwt.sign(payload, env.jwtSecret, {
+    return jwt.sign({ ...payload, token_use: 'access' }, env.jwtSecret, {
       expiresIn: env.jwtExpiresIn,
     });
   },
@@ -22,7 +22,7 @@ const tokenManager = {
    * @returns {string}
    */
   generateRefreshToken(payload) {
-    return jwt.sign(payload, env.jwtSecret, {
+    return jwt.sign({ ...payload, token_use: 'refresh' }, env.jwtSecret, {
       expiresIn: env.jwtRefreshExpiresIn,
     });
   },
@@ -33,8 +33,14 @@ const tokenManager = {
    * @returns {object} Decoded token payload.
    * @throws {Error} If the token is invalid or expired.
    */
-  verifyToken(token) {
-    return jwt.verify(token, env.jwtSecret);
+  verifyToken(token, expectedUse) {
+    const decoded = jwt.verify(token, env.jwtSecret);
+    if (expectedUse && decoded.token_use !== expectedUse) {
+      const error = new Error('Invalid token type.');
+      error.name = 'JsonWebTokenError';
+      throw error;
+    }
+    return decoded;
   },
 };
 

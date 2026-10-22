@@ -29,7 +29,6 @@ export const notFoundHandler = (req, res, _next) => {
  * Global error handling middleware.
  * Must be registered LAST in the middleware chain.
  */
-// eslint-disable-next-line no-unused-vars
 export const errorHandler = (err, req, res, _next) => {
   // Log the full error
   logger.error(err);

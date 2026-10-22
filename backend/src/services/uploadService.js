@@ -14,7 +14,19 @@ const uploadService = {
   async uploadFile(file, userId, prefix = '') {
     try {
       // 1. Generate unique file name
-      const fileExt = file.originalname.split('.').pop();
+      const extensionsByMimeType = {
+        'application/pdf': 'pdf',
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'application/zip': 'zip',
+        'application/x-zip-compressed': 'zip',
+        'application/msword': 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      };
+      const fileExt = extensionsByMimeType[file.mimetype];
+      if (!fileExt) {
+        throw new AppError('Unsupported file type.', 400);
+      }
       const uniqueSuffix = crypto.randomBytes(4).toString('hex');
       
       // Clean up prefix (remove spaces and special chars, replace with dash)
@@ -22,7 +34,7 @@ const uploadService = {
       const fileName = `${cleanPrefix}${userId}-${Date.now()}-${uniqueSuffix}.${fileExt}`;
 
       // 2. Upload to Supabase Storage (Bucket: 'competition-files')
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('competition-files')
         .upload(fileName, file.buffer, {
           contentType: file.mimetype,

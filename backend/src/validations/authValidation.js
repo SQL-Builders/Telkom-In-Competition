@@ -20,7 +20,6 @@ export const registerSchema = z.object({
     .string()
     .regex(/^[0-9+\-\s()]+$/, 'Invalid phone number format.')
     .optional(),
-  role: z.enum(['user', 'admin']).default('user'),
 });
 
 /**

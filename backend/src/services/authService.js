@@ -13,7 +13,7 @@ const authService = {
    * @returns {object} { user, accessToken, refreshToken }
    */
   async register(userData) {
-    const { name, email, password, nama_lengkap, no_telepon, role } = userData;
+    const { name, email, password, nama_lengkap, no_telepon } = userData;
 
     // Check if email already exists
     const { data: existingUser } = await supabase
@@ -38,7 +38,8 @@ const authService = {
         password: hashedPassword,
         nama_lengkap: nama_lengkap || null,
         no_telepon: no_telepon || null,
-        role: role || 'user',
+        // Public registration must never be able to create privileged users.
+        role: 'user',
         tgl_daftar: new Date().toISOString(),
       })
       .select('id_user, name, email, role, nama_lengkap, no_telepon, tgl_daftar')
@@ -106,7 +107,8 @@ const authService = {
     const refreshToken = tokenManager.generateRefreshToken(tokenPayload);
 
     // Exclude password from response
-    const { password: _, ...userWithoutPassword } = user;
+    const userWithoutPassword = { ...user };
+    delete userWithoutPassword.password;
 
     return { user: userWithoutPassword, accessToken, refreshToken };
   },
@@ -117,7 +119,7 @@ const authService = {
    * @returns {object} { accessToken, refreshToken }
    */
   async refreshToken(refreshToken) {
-    const decoded = tokenManager.verifyToken(refreshToken);
+    const decoded = tokenManager.verifyToken(refreshToken, 'refresh');
 
     // Verify user still exists
     const { data: user, error } = await supabase
