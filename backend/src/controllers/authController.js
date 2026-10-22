@@ -38,9 +38,6 @@ const authController = {
    *                 type: string
    *               no_telepon:
    *                 type: string
-   *               role:
-   *                 type: string
-   *                 enum: [user, admin]
    *     responses:
    *       201:
    *         description: User registered successfully

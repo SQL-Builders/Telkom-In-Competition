@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import userController from '../controllers/userController.js';
-import { authenticate, authorize } from '../middleware/authMiddleware.js';
+import { authenticate, authorize, authorizeSelfOrAdmin } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
@@ -9,8 +9,8 @@ router.use(authenticate);
 
 // ── User Routes ────────────────────────────────────────────
 router.get('/', authorize('admin'), userController.getAllUsers);
-router.get('/:id', userController.getUserById);
-router.put('/:id', userController.updateUser);
+router.get('/:id', authorizeSelfOrAdmin(), userController.getUserById);
+router.put('/:id', authorizeSelfOrAdmin(), userController.updateUser);
 router.delete('/:id', authorize('admin'), userController.deleteUser);
 router.patch('/:id/toggle-status', authorize('admin'), userController.toggleUserStatus);
 

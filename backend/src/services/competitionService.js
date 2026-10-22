@@ -28,6 +28,11 @@ const mapCompetitionToFrontend = (comp, categoryObj) => {
   };
 };
 
+export const buildCompetitionSearchFilter = (search) => {
+  const escaped = search.replace(/[\\"]/g, '\\$&');
+  return `nama_lomba.ilike."%${escaped}%",penyelenggara.ilike."%${escaped}%"`;
+};
+
 const competitionService = {
   /**
    * Get all competitions with pagination, filtering, and search.
@@ -71,7 +76,7 @@ const competitionService = {
       dataQuery = dataQuery.eq('id_kategori', kategori);
     }
     if (search) {
-      const searchFilter = `nama_lomba.ilike.%${search}%,penyelenggara.ilike.%${search}%`;
+      const searchFilter = buildCompetitionSearchFilter(search);
       countQuery = countQuery.or(searchFilter);
       dataQuery = dataQuery.or(searchFilter);
     }
@@ -338,7 +343,7 @@ const competitionService = {
    * Register a user for a competition.
    */
   async registerForCompetition(userId, competitionData) {
-    const { id_lomba, id_data_berkas } = competitionData;
+    const { id_lomba } = competitionData;
 
     // Check competition exists
     await this.getCompetitionById(id_lomba);

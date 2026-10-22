@@ -15,7 +15,7 @@ export const authenticate = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = tokenManager.verifyToken(token);
+    const decoded = tokenManager.verifyToken(token, 'access');
 
     req.user = decoded;
     next();
@@ -57,4 +57,17 @@ export const authorize = (...roles) => {
 
     next();
   };
+};
+
+/** Allow a user to access their own record, or an administrator to access any record. */
+export const authorizeSelfOrAdmin = (paramName = 'id') => (req, res, next) => {
+  if (!req.user) {
+    return errorResponse(res, 'Authentication required.', 401);
+  }
+
+  if (req.user.role === 'admin' || String(req.user.id_user) === String(req.params[paramName])) {
+    return next();
+  }
+
+  return errorResponse(res, 'Access denied. Insufficient permissions.', 403);
 };
