@@ -2,7 +2,19 @@ import { jest } from '@jest/globals';
 import { registerSchema } from '../../validations/authValidation.js';
 import { authorizeSelfOrAdmin } from '../../middleware/authMiddleware.js';
 import { validateUploadedFile } from '../../middleware/uploadMiddleware.js';
-import { buildCompetitionSearchFilter } from '../../services/competitionService.js';
+
+const supabaseMock = { from: jest.fn() };
+jest.unstable_mockModule('../../config/supabase.js', () => ({
+  default: supabaseMock,
+  supabase: supabaseMock,
+  supabaseAdmin: null,
+}));
+
+let buildCompetitionSearchFilter;
+
+beforeAll(async () => {
+  ({ buildCompetitionSearchFilter } = await import('../../services/competitionService.js'));
+});
 
 describe('Security rules', () => {
   it('strips a caller-supplied admin role from public registration data', () => {

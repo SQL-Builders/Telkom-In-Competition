@@ -1,6 +1,19 @@
 import request from 'supertest';
+import { jest } from '@jest/globals';
 import tokenManager from '../../utils/tokenManager.js';
-import app from '../../app.js';
+
+const supabaseMock = { from: jest.fn() };
+jest.unstable_mockModule('../../config/supabase.js', () => ({
+  default: supabaseMock,
+  supabase: supabaseMock,
+  supabaseAdmin: null,
+}));
+
+let app;
+
+beforeAll(async () => {
+  ({ default: app } = await import('../../app.js'));
+});
 
 describe('HTTP API security integration', () => {
   it('serves the health endpoint with security headers', async () => {

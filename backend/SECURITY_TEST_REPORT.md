@@ -6,6 +6,7 @@ Date: 2026-10-22
 
 - Reviewed the Express API, auth and profile routes, validation, JWT handling, upload handling, and Supabase service calls.
 - Added unit tests and HTTP integration tests with Supertest. Tests use a signed test JWT and do not call the configured Supabase project.
+- Unit and integration suites mock the Supabase module before importing services or the Express app, so tests do not initialize a real Supabase client or require WebSocket support.
 - Added GitHub Actions automation for the backend test suite.
 - No external host, production account, or production data was tested.
 
@@ -45,6 +46,6 @@ Access and refresh JWTs used the same signing secret and had no token-purpose cl
 
 ## Verification
 
-`npm run test:unit`, `npm run test:integration`, and `npm run test:automation` passed locally (23 tests total). The tests use the project's installed dependencies; CI uses placeholder environment values and makes no database calls for these tests.
+`npm run test:unit`, `npm run test:integration`, and `npm run test:automation` passed locally (23 tests total, Node 24); lint also passed. CI targets Node 20 and uses placeholder environment values. Tests make no database calls and mock the Supabase client before app/service imports.
 
 `npm run lint` passed with the new ESLint 9 flat config. The config exposed and helped fix four pre-existing unused-variable issues.
