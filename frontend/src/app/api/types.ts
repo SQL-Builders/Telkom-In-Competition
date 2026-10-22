@@ -11,7 +11,6 @@ export interface RegisterRequest {
   password: string;
   nama_lengkap?: string;
   no_telepon?: string;
-  role?: 'user' | 'admin';
 }
 
 export interface ChangePasswordRequest {
@@ -24,13 +23,19 @@ export interface RefreshTokenRequest {
 }
 
 export interface AuthUser {
-  id: number;
+  id_user: number;
   name: string;
   email: string;
   role: 'user' | 'admin';
   nama_lengkap?: string;
   no_telepon?: string;
   created_at?: string;
+}
+
+export interface CurrentAuthUser {
+  id_user: number;
+  email: string;
+  role: 'user' | 'admin';
 }
 
 export interface AuthResponse {
